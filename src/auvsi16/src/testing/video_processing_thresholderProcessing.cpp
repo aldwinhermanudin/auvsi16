@@ -77,7 +77,7 @@ int main(int argc, char **argv)
   cv::namedWindow("view");
   cv::startWindowThread();
   image_transport::ImageTransport it(nh);
-  image_transport::Subscriber sub = it.subscribe("AUVSI16/media/video", 1, imageCallback); // Topik subscribe: AUVSI16/media/video
+  image_transport::Subscriber sub = it.subscribe("auvsi16/video", 1, imageCallback); // Topik subscribe: AUVSI16/media/video
   ros::spin();
   cv::destroyWindow("view");
 }
