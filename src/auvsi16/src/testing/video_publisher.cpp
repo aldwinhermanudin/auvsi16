@@ -16,7 +16,7 @@ int main(int argc, char** argv)
   ros::NodeHandle nh;
   
   image_transport::ImageTransport it(nh);
-  image_transport::Publisher pub = it.advertise("AUVSI16/media/video", 10000); // Topik publish: AUVSI16//media/video; Queue: 1000
+  image_transport::Publisher pub = it.advertise("auvsi16/video", 10000); // Topik publish: AUVSI16//media/video; Queue: 1000
 
 
   int video0;
