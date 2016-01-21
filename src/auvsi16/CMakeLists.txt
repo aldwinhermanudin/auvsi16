@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
+find_package(OpenCV REQUIRED)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -119,6 +120,7 @@ catkin_package(
 # include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -133,6 +135,11 @@ include_directories(
 
 ## Declare a C++ executable
 # add_executable(auvsi16_node src/auvsi16_node.cpp)
+add_executable(image_publisher src/image_publisher.cpp)
+add_executable(image_listener src/image_listener.cpp)
+add_executable(video_publisher src/video_publisher.cpp)
+add_executable(video_listener src/video_listener.cpp)
+add_executable(video_processing_thresholderProcessing src/video_processing_thresholderProcessing.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -142,6 +149,26 @@ include_directories(
 # target_link_libraries(auvsi16_node
 #   ${catkin_LIBRARIES}
 # )
+target_link_libraries(image_publisher
+	${catkin_LIBRARIES}
+	${OpenCV_LIBRARIES} 
+)
+target_link_libraries(image_listener
+	${catkin_LIBRARIES}
+	${OpenCV_LIBRARIES} 
+)
+target_link_libraries(video_publisher
+	${catkin_LIBRARIES}
+	${OpenCV_LIBRARIES} 
+)
+target_link_libraries(video_listener
+	${catkin_LIBRARIES}
+	${OpenCV_LIBRARIES} 
+)
+target_link_libraries(video_processing_thresholderProcessing
+	${catkin_LIBRARIES}
+	${OpenCV_LIBRARIES}
+)
 
 #############
 ## Install ##
