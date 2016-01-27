@@ -135,11 +135,8 @@ include_directories(
 
 ## Declare a C++ executable
 # add_executable(auvsi16_node src/auvsi16_node.cpp)
-add_executable(image_publisher src/image_publisher.cpp)
-add_executable(image_listener src/image_listener.cpp)
-add_executable(video_publisher src/video_publisher.cpp)
-add_executable(video_listener src/video_listener.cpp)
-add_executable(video_processing_thresholderProcessing src/video_processing_thresholderProcessing.cpp)
+add_executable(video_feed src/video_feed.cpp)
+add_executable(video_listener src/example/video_listener.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -149,15 +146,8 @@ add_executable(video_processing_thresholderProcessing src/video_processing_thres
 # target_link_libraries(auvsi16_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries(image_publisher
-	${catkin_LIBRARIES}
-	${OpenCV_LIBRARIES} 
-)
-target_link_libraries(image_listener
-	${catkin_LIBRARIES}
-	${OpenCV_LIBRARIES} 
-)
-target_link_libraries(video_publisher
+
+target_link_libraries(video_feed
 	${catkin_LIBRARIES}
 	${OpenCV_LIBRARIES} 
 )
@@ -165,10 +155,7 @@ target_link_libraries(video_listener
 	${catkin_LIBRARIES}
 	${OpenCV_LIBRARIES} 
 )
-target_link_libraries(video_processing_thresholderProcessing
-	${catkin_LIBRARIES}
-	${OpenCV_LIBRARIES}
-)
+
 
 #############
 ## Install ##
