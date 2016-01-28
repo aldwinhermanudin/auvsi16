@@ -7,7 +7,7 @@ Divided into :
 
 - [x] Video Feed
 - [ ] Thruster Controller
-- [ ] Heartbeat monitor(using TCP/IP Stack)
+- [ ] Heartbeat monitor (using TCP/IP Stack)
 - [ ] Start/run mission (using TCP/IP Stack) 
 - [ ] TCP Bridge (using TCP/IP Stack)
 - [ ] Node Monitor
