@@ -9,9 +9,9 @@
 // rosrun rosserial_server serial_node _port:=/dev/ttyUSB0
 //
 // test in the cmd by using the command below
-// rostopic pub -1 /auvsi16/motor_control auvsi16/motor_controller -- 2000 1100 false
+// rostopic pub -1 /auvsi16/differential_control auvsi16/differential_controller -- 2000 1100 false
 // or
-// rostopic pub -1 /auvsi16/motor_control auvsi16/motor_controller -- 2000 1100 0
+// rostopic pub -1 /auvsi16/differential_control auvsi16/differential_controller -- 2000 1100 0
 //
 // #### failure notes #### 
 // rosserial_python or rosserial_server may fail connecting to arduino nano if datarate is to high.
@@ -19,10 +19,10 @@
 
 #include <Servo.h> 
 #include <ros.h>
-#include <auvsi16/motor_controller.h>
+#include <auvsi16/differential_controller.h>
 
 ros::NodeHandle  nh;
-void motor_ctrl_cb( const auvsi16::motor_controller& recv_msg);
+void motor_ctrl_cb( const auvsi16::differential_controller& recv_msg);
 Servo left_motor,right_motor;
 bool override_apm_flag;
 
@@ -32,7 +32,7 @@ int right_esc_pin = A3;
 int override_apm_pin = A0;
 // ### Pin Settings ###
 
-ros::Subscriber<auvsi16::motor_controller> mtr_ctrl_sub("auvsi16/motor_control", motor_ctrl_cb);
+ros::Subscriber<auvsi16::differential_controller> mtr_ctrl_sub("auvsi16/differential_control", motor_ctrl_cb);
 void setup(){
   pinMode(override_apm_pin, OUTPUT);
   
@@ -53,7 +53,7 @@ void loop(){
   delay(1);
 }
 
-void motor_ctrl_cb( const auvsi16::motor_controller& recv_msg){
+void motor_ctrl_cb( const auvsi16::differential_controller& recv_msg){
    
   //Override APM Control
   if(recv_msg.override_apm){
