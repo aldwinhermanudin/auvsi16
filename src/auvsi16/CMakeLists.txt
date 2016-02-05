@@ -52,7 +52,8 @@ find_package(OpenCV REQUIRED)
 ## Generate messages in the 'msg' folder
  add_message_files(
    FILES
-   motor_controller.msg
+   differential_controller.msg
+   overrideMotorRC.msg
  )
 
 ## Generate services in the 'srv' folder
@@ -138,6 +139,7 @@ include_directories(
 ## Declare a C++ executable
 # add_executable(auvsi16_node src/auvsi16_node.cpp)
 add_executable(video_feed src/video_feed.cpp)
+add_executable(motor_controller src/motor_controller.cpp)
 add_executable(video_listener src/example/video_listener.cpp)
 
 ## Add cmake target dependencies of the executable
@@ -149,6 +151,10 @@ add_executable(video_listener src/example/video_listener.cpp)
 #   ${catkin_LIBRARIES}
 # )
 
+target_link_libraries(motor_controller
+	${catkin_LIBRARIES}
+	${OpenCV_LIBRARIES} 
+)
 target_link_libraries(video_feed
 	${catkin_LIBRARIES}
 	${OpenCV_LIBRARIES} 
