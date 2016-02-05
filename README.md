@@ -3,7 +3,7 @@ ROS Indigo code for controlling makara05 autonomously using OpenCV and Ardupilot
 
 Divided into :
 
-6 main nodes
+7 main nodes
 
 - [x] Video Feed
 - [x] Motor Controller
