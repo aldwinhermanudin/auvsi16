@@ -11,7 +11,7 @@ Divided into :
 - [ ] Start/run mission (using TCP/IP Stack) 
 - [ ] TCP Bridge (using TCP/IP Stack)
 - [ ] Node Monitor
-- [ ] HC-SR04 Data Publisher
+- [x] HC-SR04 Data Publisher
 
 5 mission nodes
 
