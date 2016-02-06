@@ -54,6 +54,7 @@ find_package(OpenCV REQUIRED)
    FILES
    differential_controller.msg
    overrideMotorRC.msg
+   sonarData.msg
  )
 
 ## Generate services in the 'srv' folder
