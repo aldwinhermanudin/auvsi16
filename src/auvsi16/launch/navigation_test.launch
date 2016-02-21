@@ -1,0 +1,44 @@
+<launch>
+	
+	<node name="mavsys" pkg="mavros" type="mavsys" args="rate --all 10" />
+	<param name="/auvsi16/video/compressed/jpeg_quality" value="50" />
+	<node name="video_feed" pkg="auvsi16" type="video_feed" output="screen">
+		<param name="camera_port" value="0" />
+		<param name="camera_width" value="1280" />
+		<param name="camera_height" value="720" />
+		
+		<param name="v4l2_configuration" value="0" />
+		<param name="v4l2_exposure_mode" value="1" />
+		<param name="v4l2_exposure_value" value="1500" />
+		<param name="v4l2_white_balance_mode" value="0" />
+		<param name="v4l2_white_balance_value" value="4000" />
+		<param name="v4l2_brightness" value="128" />
+		<param name="v4l2_contrast" value="128" />
+		<param name="v4l2_saturation" value="128" />
+		<param name="v4l2_sharpness" value="128" />
+		<param name="v4l2_gain" value="158" />
+	</node>
+	
+	<!-- PID Here is deprecated change in the pid_controller  -->
+	<!-- Change PID in the code by publishing to pid_const-->
+  
+	<arg name="pid_rate" default="100" />
+	
+	<arg name="kp" default="0" />
+	<arg name="ki" default="0" />
+	<arg name="kd" default="0" />
+	<arg name="upper_limit" default="2000" />
+	<arg name="lower_limit" default="-2000" />
+	
+	<!-- anti-windup is to clap integral value -->
+	<arg name="anti_windup" default="0.1" />
+	
+	<arg name="topic_pid_in" default="auvsi16/pid/in" />
+	<arg name="topic_pid_out" default="auvsi16/pid/out" />
+	<node name="pid_controller" pkg="pid" output="screen" type="controller_adaptive" args="$(arg kp) $(arg ki) $(arg kd) $(arg pid_rate) -tfp $(arg topic_pid_in) -tfc $(arg topic_pid_out) -ul $(arg upper_limit) -ll $(arg lower_limit) -aw $(arg anti_windup)" />
+	
+	<node name="override_monitor" pkg="auvsi16" output="screen" type="override_monitor"/>
+	<node name="motor_controller" pkg="auvsi16" output="screen" type="motor_controller"/>
+	<node name="navigation_mission" pkg="auvsi16" output="screen" type="navigation_mission"/>
+
+</launch>
