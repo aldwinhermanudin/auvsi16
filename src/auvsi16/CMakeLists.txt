@@ -19,7 +19,6 @@ find_package(catkin REQUIRED COMPONENTS
 # find_package(Boost REQUIRED COMPONENTS system)
 find_package(OpenCV REQUIRED)
 
-
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
@@ -141,6 +140,9 @@ include_directories(
 # add_executable(auvsi16_node src/auvsi16_node.cpp)
 add_executable(video_feed src/video_feed.cpp)
 add_executable(motor_controller src/motor_controller.cpp)
+add_executable(navigation_mission src/navigation_mission.cpp)
+add_executable(override_monitor src/override_monitor.cpp)
+add_executable(ground_monitor src/ground_monitor.cpp)
 add_executable(video_listener src/example/video_listener.cpp)
 
 ## Add cmake target dependencies of the executable
@@ -152,13 +154,27 @@ add_executable(video_listener src/example/video_listener.cpp)
 #   ${catkin_LIBRARIES}
 # )
 
+target_link_libraries(navigation_mission
+	${catkin_LIBRARIES}
+	${OpenCV_LIBRARIES}
+)
+
+target_link_libraries(ground_monitor
+	${catkin_LIBRARIES}
+	${OpenCV_LIBRARIES}
+)
+
+target_link_libraries(override_monitor
+	${catkin_LIBRARIES}
+	${OpenCV_LIBRARIES}
+)
 target_link_libraries(motor_controller
 	${catkin_LIBRARIES}
-	${OpenCV_LIBRARIES} 
 )
 target_link_libraries(video_feed
 	${catkin_LIBRARIES}
-	${OpenCV_LIBRARIES} 
+	${OpenCV_LIBRARIES}
+	-lv4l2
 )
 target_link_libraries(video_listener
 	${catkin_LIBRARIES}
