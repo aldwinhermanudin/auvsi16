@@ -19,6 +19,7 @@ cv::Mat image_received;
 void imageReceiveCB(const sensor_msgs::ImageConstPtr& msg);
 void pidOutCB(const pid::controller_msg& msg);
 void sonarDataCB(const auvsi16::sonarData& msg);
+int imageProcessing();
 
 double pid_out;
 int sonar_data[13];
@@ -30,6 +31,15 @@ float Ki = 0.1 ;
 float Kd = 0.02 ;
 double t_IC = 0.0;
 double delta_t = 0.01;
+
+	int iLowH = 58;
+	int iHighH = 70;
+
+	int iLowS = 101; 
+	int iHighS = 179;
+
+	int iLowV = 99;
+	int iHighV = 255;
 
 int main(int argc, char **argv){
 	
@@ -55,14 +65,7 @@ int main(int argc, char **argv){
 	namedWindow("Thresholded Image", CV_WINDOW_NORMAL); //create a window called "Control"
 	namedWindow("Original", CV_WINDOW_NORMAL); //create a window called "Control"
 	
-	int iLowH = 58;
-	int iHighH = 70;
 
-	int iLowS = 101; 
-	int iHighS = 179;
-
-	int iLowV = 99;
-	int iHighV = 255;
 	//Create trackbars in "Control" window
 	createTrackbar("LowH", "Control", &iLowH, 179); //Hue (0 - 179)
 	createTrackbar("HighH", "Control", &iHighH, 179);
@@ -76,37 +79,9 @@ int main(int argc, char **argv){
 	
 	while (ros::ok()){
 		
-		ros::spinOnce();	// read frame
-
-		Mat imgHSV;
-
-		cvtColor(image_received, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
-		 
-		Mat imgThresholded;
-		inRange(imgHSV, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), imgThresholded); //Threshold the image
-			  
-		//morphological opening (removes small objects from the foreground)
-		erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
-		dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) ); 
-
-		//morphological closing (removes small holes from the foreground)
-		dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) ); 
-		erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
-
-		//Calculate the moments of the thresholded image
-		Moments oMoments = moments(imgThresholded);
-
-		double dM01 = oMoments.m01;
-		double dM10 = oMoments.m10;
-		double dArea = oMoments.m00;
-
-		// if the area <= 10000, I consider that the there are no object in the image and it's because of the noise, the area is not zero 
-		if (dArea > 10000){
-				
-			//calculate the position of the ball
-			int posX = dM10 / dArea;
+			ros::spinOnce();	// read frame
 			
-			pid_in.x = posX;
+			pid_in.x = imageProcessing();
 			pid_in.t = pid_in.t+delta_t;
 			
 			pub_pid_in.publish(pid_in);
@@ -116,21 +91,7 @@ int main(int argc, char **argv){
 			motor_control.steering = 1500 + (0 - pid_out);
 			motor_control.throttle = 1600;
 			pub_ovrd_mtr.publish(motor_control);
-			   
-			cout << "######## Posisi X dan Y #########" << endl;
-			cout << "Posisi X : " << posX << endl;
-			cout << endl;
 			
-		}
-		
-		
-	   imshow("Thresholded Image", imgThresholded); //show the thresholded image
-	   imshow("Original", image_received); //show the original image
-
-		if (waitKey(30) == 27){
-			cout << "esc key is pressed by user" << endl;
-			break; 
-		}
 	}
 }
 
@@ -154,4 +115,60 @@ void pidOutCB(const pid::controller_msg& pid_out_recv){
 void sonarDataCB(const auvsi16::sonarData& sonar_recv){
 	
 	for(int i=0; i < 13; i++) sonar_data[i] = sonar_recv.data[i];
+}
+
+int imageProcessing(){
+	
+	Mat imgHSV;
+
+	cvtColor(image_received, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
+		 
+	Mat imgThresholded;
+	inRange(imgHSV, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), imgThresholded); //Threshold the image
+			  
+	//morphological opening (removes small objects from the foreground)
+	erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+	dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) ); 
+
+	//morphological closing (removes small holes from the foreground)
+	dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) ); 
+	erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+
+	//Calculate the moments of the thresholded image
+	Moments oMoments = moments(imgThresholded);
+
+	double dM01 = oMoments.m01;
+	double dM10 = oMoments.m10;
+	double dArea = oMoments.m00;
+
+	// if the area <= 10000, I consider that the there are no object in the image and it's because of the noise, the area is not zero 
+	if (dArea > 10000){
+				
+		//calculate the position of the ball
+		int posX = dM10 / dArea;
+			   
+		cout << "######## Posisi X dan Y #########" << endl;
+		cout << "Posisi X : " << posX << endl;
+		cout << endl;
+		
+		imshow("Thresholded Image", imgThresholded); //show the thresholded image
+		imshow("Original", image_received); //show the original image
+
+		if (waitKey(30) == 27){
+			cout << "esc key is pressed by user" << endl;
+			ros::shutdown();
+		}
+			
+		return posX;
+	}
+	
+	imshow("Thresholded Image", imgThresholded); //show the thresholded image
+	imshow("Original", image_received); //show the original image
+
+		if (waitKey(30) == 27){
+			cout << "esc key is pressed by user" << endl;
+			ros::shutdown(); 
+		}	
+	
+	return 0;
 }
