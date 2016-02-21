@@ -1,0 +1,21 @@
+<launch>
+
+	<param name="/auvsi16/video/compressed/jpeg_quality" value="50" />
+	<node name="video_feed" pkg="auvsi16" type="video_feed" output="screen">
+		<param name="camera_port" value="1" />
+		<param name="camera_width" value="640" />
+		<param name="camera_height" value="480" />
+		
+		<param name="v4l2_configuration" value="1" />
+		<param name="v4l2_exposure_mode" value="1" />
+		<param name="v4l2_exposure_value" value="1500" />
+		<param name="v4l2_white_balance_mode" value="0" />
+		<param name="v4l2_white_balance_value" value="4000" />
+		<param name="v4l2_brightness" value="128" />
+		<param name="v4l2_contrast" value="128" />
+		<param name="v4l2_saturation" value="128" />
+		<param name="v4l2_sharpness" value="128" />
+		<param name="v4l2_gain" value="158" />
+	</node>
+
+</launch>
