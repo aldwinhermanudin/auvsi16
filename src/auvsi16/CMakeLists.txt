@@ -18,6 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 find_package(OpenCV REQUIRED)
+find_package(GeographicLib 1.46 REQUIRED)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -57,11 +58,10 @@ find_package(OpenCV REQUIRED)
  )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+ add_service_files(
+   FILES
+   waypointSet.srv
+ )
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -124,6 +124,7 @@ CATKIN_DEPENDS message_runtime
 include_directories(
   ${catkin_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
+  ${GeographicLib_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -139,11 +140,43 @@ include_directories(
 ## Declare a C++ executable
 # add_executable(auvsi16_node src/auvsi16_node.cpp)
 add_executable(video_feed src/video_feed.cpp)
+add_executable(video_feed_upstream src/video_feed_upstream.cpp)
 add_executable(motor_controller src/motor_controller.cpp)
 add_executable(navigation_mission src/navigation_mission.cpp)
 add_executable(override_monitor src/override_monitor.cpp)
 add_executable(ground_monitor src/ground_monitor.cpp)
-add_executable(video_listener src/example/video_listener.cpp)
+add_executable(waypoint_set_server src/waypoint_set_server.cpp )
+
+## Declare a C++ executable for testing
+add_executable(gps_calculation src/testing/gps_calculation.cpp)
+
+target_link_libraries(gps_calculation
+	${catkin_LIBRARIES}
+	${OpenCV_LIBRARIES}
+	${GeographicLib_LIBRARIES}
+)
+
+add_executable(video_publisher_trial src/testing/video_publisher_trial.cpp)
+
+target_link_libraries(video_publisher_trial
+	${catkin_LIBRARIES}
+	${OpenCV_LIBRARIES}
+)
+
+add_executable(ground_monitor_trial src/testing/ground_monitor_trial.cpp )
+
+target_link_libraries(ground_monitor_trial
+	${catkin_LIBRARIES}
+	${OpenCV_LIBRARIES}
+)
+
+add_executable(wp_updater src/testing/wp_updater.cpp )
+
+target_link_libraries(wp_updater
+	${catkin_LIBRARIES}
+	${OpenCV_LIBRARIES}
+	${GeographicLib_LIBRARIES}
+)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -157,6 +190,7 @@ add_executable(video_listener src/example/video_listener.cpp)
 target_link_libraries(navigation_mission
 	${catkin_LIBRARIES}
 	${OpenCV_LIBRARIES}
+	${GeographicLib_LIBRARIES}
 )
 
 target_link_libraries(ground_monitor
@@ -168,19 +202,25 @@ target_link_libraries(override_monitor
 	${catkin_LIBRARIES}
 	${OpenCV_LIBRARIES}
 )
+
 target_link_libraries(motor_controller
 	${catkin_LIBRARIES}
 )
+
 target_link_libraries(video_feed
 	${catkin_LIBRARIES}
 	${OpenCV_LIBRARIES}
 	-lv4l2
 )
-target_link_libraries(video_listener
+
+target_link_libraries(video_feed_upstream
 	${catkin_LIBRARIES}
-	${OpenCV_LIBRARIES} 
+	${OpenCV_LIBRARIES}
 )
 
+target_link_libraries(waypoint_set_server
+	${catkin_LIBRARIES}
+)
 
 #############
 ## Install ##

@@ -9,9 +9,9 @@
 
 bool override_status = false;
 ros::Publisher pub_override_rc;
-mavros_msgs::OverrideRCIn override_out;
 void overrideInputCB(const auvsi16::overrideMotorRC& override_recv);
 void overrideStatusCB(const std_msgs::Bool& override_status_recv);
+bool last_override_status = true;
 
 int main(int argc, char **argv)
 {
@@ -33,19 +33,40 @@ void overrideStatusCB(const std_msgs::Bool& override_status_recv){
 }
 
 void overrideInputCB(const auvsi16::overrideMotorRC& override_recv){
-   
+	mavros_msgs::OverrideRCIn override_out;
   // Drone control 
   if(override_status){
 	for(int i=0; i < 8; i++) override_out.channels[i] = 0;	//Releases all Channels First
 	
-	override_out.channels[THROTTLE] = override_recv.throttle;
-    override_out.channels[STEERING] = override_recv.steering;
-    pub_override_rc.publish(override_out);
-  }
+	if (override_recv.throttle > 1942){
+		override_out.channels[THROTTLE] = 1942;
+	} 	
+	else if (override_recv.throttle < 1101){
+		override_out.channels[THROTTLE] = 1101;
+	}	
+	else {
+		override_out.channels[THROTTLE] = override_recv.throttle;
+	}
+	
+	if (override_recv.steering > 1942){
+		override_out.channels[STEERING] = 1942;
+	}	
+	else if (override_recv.steering < 1116){
+		override_out.channels[STEERING] = 1116;
+	}	
+	else {
+		override_out.channels[STEERING] = override_recv.steering;
+  	}
+  
+      pub_override_rc.publish(override_out);
+      
+	last_override_status = override_status;
+ }
   
   // RC take control
-  else if(!override_status){
+  else if(!override_status && last_override_status){
 	
 	ROS_WARN_STREAM( "[MC] Override Off") ;
+	last_override_status = override_status;
   }
 }

@@ -23,11 +23,11 @@ void imageCallback(const sensor_msgs::CompressedImage& msg)
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "system_monitor");
+  ros::init(argc, argv, "ground_monitor");
   ros::NodeHandle nh;
   cv::namedWindow("Compressed Video", cv::WINDOW_NORMAL);
   cv::startWindowThread();
-  ros::Subscriber sub = nh.subscribe("auvsi16/video/compressed", 1, imageCallback,ros::TransportHints().unreliable()); // setting queue to 1 remove delay in compressedImage data | also using UDP
+  ros::Subscriber sub = nh.subscribe("auvsi16/video/resize/compressed", 1, imageCallback,ros::TransportHints().unreliable()); // setting queue to 1 remove delay in compressedImage data | also using UDP
   ros::spin();
   cv::destroyWindow("Compressed Video");
 }

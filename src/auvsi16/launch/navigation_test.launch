@@ -1,7 +1,13 @@
 <launch>
 	
 	<node name="mavsys" pkg="mavros" type="mavsys" args="rate --all 10" />
-	<param name="/auvsi16/video/compressed/jpeg_quality" value="50" />
+	<param name="/auvsi16/video/resize/compressed/jpeg_quality" value="10" />
+	
+	<node name="video_feed_upstream" pkg="auvsi16" type="video_feed_upstream" output="screen">
+		<param name="resize_width_factor" value="0.3" />
+		<param name="resize_height_factor" value="0.3" />
+	</node>
+	
 	<node name="video_feed" pkg="auvsi16" type="video_feed" output="screen">
 		<param name="camera_port" value="0" />
 		<param name="camera_width" value="1280" />
@@ -39,6 +45,7 @@
 	
 	<node name="override_monitor" pkg="auvsi16" output="screen" type="override_monitor"/>
 	<node name="motor_controller" pkg="auvsi16" output="screen" type="motor_controller"/>
-	<node name="navigation_mission" pkg="auvsi16" output="screen" type="navigation_mission"/>
+	<node name="waypoint_set_server" pkg="auvsi16" output="screen" type="waypoint_set_server"/>
+	<!-- <node name="navigation_mission" pkg="auvsi16" output="screen" type="navigation_mission"/> -->
 
 </launch>
