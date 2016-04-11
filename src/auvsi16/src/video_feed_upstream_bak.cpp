@@ -29,13 +29,16 @@ int main(int argc, char **argv){
 }
 
 void imageCallback(const sensor_msgs::ImageConstPtr& msg){
-  cv_bridge::CvImagePtr cv_ptr;
+  cv::Mat image_received;  
+  cv::Mat resized_frame;
+  sensor_msgs::ImagePtr image_msg_resize;
+
   try{
-	
-	cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-	
-    resize(cv_ptr->image, cv_ptr->image, Size(), resize_width_factor, resize_height_factor, INTER_LINEAR);
-	pub_video_resize.publish(cv_ptr->toImageMsg());
+	image_received  = cv_bridge::toCvCopy(msg, "bgr8")->image;		// use cv_bridge::toCvCopy instead of cv_bridge::toCvShare to process a mat data
+    
+    resize(image_received, resized_frame, Size(), resize_width_factor, resize_height_factor, INTER_LINEAR);
+	image_msg_resize = cv_bridge::CvImage(std_msgs::Header(), "bgr8", resized_frame).toImageMsg();
+	pub_video_resize.publish(image_msg_resize);
   }
   
   catch (cv_bridge::Exception& e){

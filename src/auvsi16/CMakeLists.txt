@@ -148,6 +148,14 @@ add_executable(ground_monitor src/ground_monitor.cpp)
 add_executable(waypoint_set_server src/waypoint_set_server.cpp )
 
 ## Declare a C++ executable for testing
+add_executable(unit_test src/testing/unit_test.cpp)
+
+target_link_libraries(unit_test
+	${catkin_LIBRARIES}
+	${OpenCV_LIBRARIES}
+	${GeographicLib_LIBRARIES}
+)
+
 add_executable(gps_calculation src/testing/gps_calculation.cpp)
 
 target_link_libraries(gps_calculation
@@ -244,11 +252,11 @@ target_link_libraries(waypoint_set_server
 # )
 
 ## Mark cpp header files for installation
-# install(DIRECTORY include/${PROJECT_NAME}/
-#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-#   FILES_MATCHING PATTERN "*.h"
-#   PATTERN ".svn" EXCLUDE
-# )
+ install(DIRECTORY include/${PROJECT_NAME}/
+   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+   FILES_MATCHING PATTERN "*.hpp"
+   PATTERN ".svn" EXCLUDE
+ )
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 # install(FILES
