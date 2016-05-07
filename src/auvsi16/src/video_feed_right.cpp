@@ -15,7 +15,7 @@ void v4l2Configuration(const char* camera_port,int exposure_mode,int exposure_va
 void getCameraParameter(ros::NodeHandle nh_main);
 void setCameraConfiguration();
 	
-int camera_port = 0;
+int camera_port = 1;
 int camera_width = 1280;
 int camera_height = 720;
 	
@@ -37,11 +37,11 @@ using namespace cv;
 
 int main(int argc, char** argv){
 
-	ros::init(argc, argv, "video_feed"); // node name: video_publisher
+	ros::init(argc, argv, "video_feed_right"); // node name: video_publisher
 	ros::NodeHandle nh("~");
 	
  	image_transport::ImageTransport it(nh);
-	image_transport::Publisher pub_video = it.advertise("/auvsi16/video", 1, true); 	// topic: auvsi16/video; Queue: 1; Latch :true
+	image_transport::Publisher pub_video = it.advertise("/auvsi16/video/right", 1, true); 	// topic: auvsi16/video; Queue: 1; Latch :true
 	
 	getCameraParameter(nh);
 	setCameraConfiguration();
@@ -71,10 +71,10 @@ int main(int argc, char** argv){
 void setCameraConfiguration(){
 	
 	if (v4l2_configuration == 0){
-		ROS_INFO("V4L2 Configuration Disabled");
+		ROS_INFO("[VFR] V4L2 Configuration Disabled");
 	}
 	else if (v4l2_configuration == 1){
-		ROS_INFO("V4L2 Configuration Enabled\n");
+		ROS_INFO("[VFR] V4L2 Configuration Enabled\n");
 		char video_port[] = "/dev/video0";
 		video_port[10] = camera_port+48;
 		

@@ -73,7 +73,7 @@ find_package(GeographicLib 1.46 REQUIRED)
 ## Generate added messages and services with any dependencies listed here
  generate_messages(
    DEPENDENCIES
-#   mavros_msgs#   sensor_msgs#   std_msgs
+    mavros_msgs#   sensor_msgs#   std_msgs
 	std_msgs
  )
 
@@ -139,13 +139,19 @@ include_directories(
 
 ## Declare a C++ executable
 # add_executable(auvsi16_node src/auvsi16_node.cpp)
-add_executable(video_feed src/video_feed.cpp)
+add_executable(video_feed_right src/video_feed_right.cpp)
+add_executable(video_feed_front src/video_feed_front.cpp)
 add_executable(video_feed_upstream src/video_feed_upstream.cpp)
 add_executable(motor_controller src/motor_controller.cpp)
 add_executable(navigation_mission src/navigation_mission.cpp)
+add_executable(docking_mission src/docking_mission.cpp)
 add_executable(override_monitor src/override_monitor.cpp)
 add_executable(ground_monitor src/ground_monitor.cpp)
 add_executable(waypoint_set_server src/waypoint_set_server.cpp )
+
+
+add_executable(robosub_monitor src/robosub/robosub_monitor.cpp)
+add_executable(shape_detection_and_video_upstream src/robosub/shape_detection_and_video_upstream.cpp)
 
 ## Declare a C++ executable for testing
 add_executable(unit_test src/testing/unit_test.cpp)
@@ -195,7 +201,24 @@ target_link_libraries(wp_updater
 #   ${catkin_LIBRARIES}
 # )
 
+target_link_libraries(shape_detection_and_video_upstream
+	${catkin_LIBRARIES}
+	${OpenCV_LIBRARIES}
+	${GeographicLib_LIBRARIES}
+)
+target_link_libraries(robosub_monitor
+	${catkin_LIBRARIES}
+	${OpenCV_LIBRARIES}
+)
+
+
 target_link_libraries(navigation_mission
+	${catkin_LIBRARIES}
+	${OpenCV_LIBRARIES}
+	${GeographicLib_LIBRARIES}
+)
+
+target_link_libraries(docking_mission
 	${catkin_LIBRARIES}
 	${OpenCV_LIBRARIES}
 	${GeographicLib_LIBRARIES}
@@ -215,7 +238,13 @@ target_link_libraries(motor_controller
 	${catkin_LIBRARIES}
 )
 
-target_link_libraries(video_feed
+target_link_libraries(video_feed_right
+	${catkin_LIBRARIES}
+	${OpenCV_LIBRARIES}
+	-lv4l2
+)
+
+target_link_libraries(video_feed_front
 	${catkin_LIBRARIES}
 	${OpenCV_LIBRARIES}
 	-lv4l2

@@ -31,6 +31,7 @@ int main(int argc, char **argv)
   origin_lat.data = -6.36248605092425;
   origin_long.data = 106.82503312826157;
   
+  /*
   double latitude;
   double longitude;
   calculateCoordinate(origin_lat.data, origin_long.data, 73, &latitude,&longitude,30,0);
@@ -47,7 +48,7 @@ int main(int argc, char **argv)
 	else {
 		ROS_ERROR_STREAM( "Failed to SC." ) ;
 	}
-	
+	*/
 	
 
   return 0;

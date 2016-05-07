@@ -18,6 +18,23 @@ int main(int argc, char **argv){
 	cout << endl;
 	cout << x_int << endl;
 	cout << y_int << endl;
-	ros::shutdown();	
-
+	
+	double origin_lat = -6.36248605092425;
+    double origin_long = 106.82503312826157;
+	
+	clearWaypointList();
+	
+	for(int i = 0; i <5; i++){
+		addWaypoint(origin_lat--, origin_long++);
+		// Check for success and use the response .
+		
+	}
+	
+	bool success_set = sendWaypointList();
+	if(success_set){
+			ROS_INFO_STREAM( "SC Success" ) ;
+		} 
+	else {
+			ROS_ERROR_STREAM( "Failed to SC." ) ;
+		}
 }

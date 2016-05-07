@@ -21,6 +21,7 @@
 #include "mavros_msgs/WaypointSetCurrent.h"
 #include "mavros_msgs/WaypointPush.h"
 #include "mavros_msgs/Waypoint.h"
+#include "mavros_msgs/WaypointList.h"
 #include "mavros_msgs/SetMode.h"
 #include "mavros_msgs/VFR_HUD.h"
 #include "auvsi16/waypointSet.h"
@@ -51,12 +52,16 @@ double calculateCenterLine		(int first_x, int second_x);
 void changePID					(float Kp_input, float Ki_input, float Kd_input);
 void headingControl				(int heading, int setpoint_heading);
 void overrideRCControl			(int setpoint, int input_x, int base_speed, int steer_correction);
+bool sendWaypointList			();
+void clearWaypointList			();	
+void addWaypoint				(double latitude, double longitude);
 
-double 					pid_out;
-double 					compass_hdg;
-sensor_msgs::NavSatFix	global_position;
-pid::pid_const_msg		pid_const;
-cv::Mat 				image_received;
+double 						pid_out;
+double 						compass_hdg;
+sensor_msgs::NavSatFix		global_position;
+pid::pid_const_msg			pid_const;
+cv::Mat 					image_received;
+mavros_msgs::WaypointList 	waypoint_list;
 
 ros::Publisher			pub_pid_in ;
 ros::Publisher 			pub_pid_const ;
@@ -72,7 +77,7 @@ double t_IC = 0.0;
 
 void setBMFConfiguration(ros::NodeHandle nh_main){
 
-	pub_pid_in 		= nh_main.advertise<pid::plant_msg>("auvsi16/pid/in", 1);
+	pub_pid_in 		= nh_main.advertise<pid::plant_msg>("/auvsi16/pid/in", 1);
 	pub_pid_const 	= nh_main.advertise<pid::pid_const_msg>("/auvsi16/pid/constant", 1,true);
 	pub_ovrd_mtr	= nh_main.advertise<auvsi16::overrideMotorRC>("/auvsi16/overrideMotorRC", 1);
 	
@@ -187,7 +192,6 @@ void calculateCoordinate(const double lat0, const double lon0, const double h0, 
 }
 
 bool moveForward(int shift_x){
-	auvsi16::waypointSet wp_set;
 	long double x_target;
 	long double y_target;
 	double target_latitude;
@@ -195,10 +199,11 @@ bool moveForward(int shift_x){
 	
 	positionEstimation(shift_x,compass_hdg,&x_target, &y_target);
 	calculateCoordinate(global_position.latitude, global_position.longitude, global_position.altitude, &target_latitude,&target_longitude,x_target,y_target);
-	wp_set.request.x_lat = target_latitude;
-	wp_set.request.y_long = target_longitude;
-	bool success_set = client_wp_set.call(wp_set);
-
+	
+	clearWaypointList();	// clear waypoint list
+	addWaypoint(target_latitude, target_longitude);	// add waypoint to list
+	bool success_set = sendWaypointList();	// send waypoint to fcu
+	
 	// Check for success and use the response .
 	if(success_set){
 		return true;
@@ -206,6 +211,54 @@ bool moveForward(int shift_x){
 	else {
 		return false;
 	}
+}
+
+void clearWaypointList(){
+	
+	mavros_msgs::Waypoint home_waypoint;
+	home_waypoint.frame = 0;
+	home_waypoint.command = 16;
+	home_waypoint.is_current = false;
+	home_waypoint.autocontinue = true;
+	home_waypoint.param1 = 0;
+	home_waypoint.param2 = 0;
+	home_waypoint.param3 = 0;
+	home_waypoint.param4 = 0;
+	home_waypoint.x_lat = 0;
+	home_waypoint.y_long = 0;
+	home_waypoint.z_alt = 0;
+			
+	waypoint_list.waypoints.clear();
+	waypoint_list.waypoints.push_back(home_waypoint);
+	
+}
+	
+void addWaypoint(double latitude, double longitude){
+	
+	mavros_msgs::Waypoint waypoint_input;
+	waypoint_input.frame = 3;
+	waypoint_input.command = 16;
+	waypoint_input.is_current = true;
+	waypoint_input.autocontinue = true;
+	waypoint_input.param1 = 0;
+	waypoint_input.param2 = 0;
+	waypoint_input.param3 = 0;
+	waypoint_input.param4 = 0;
+	waypoint_input.x_lat = latitude;
+	waypoint_input.y_long = longitude;
+	waypoint_input.z_alt = 0;
+
+	waypoint_list.waypoints.push_back(waypoint_input);	
+	
+}
+
+bool sendWaypointList(){
+	
+	auvsi16::waypointSet wp_set;
+	wp_set.request.waypoints = waypoint_list.waypoints;
+	bool success_call = client_wp_set.call(wp_set);
+	clearWaypointList();
+	return success_call ;
 }
 
 bool changeFlightMode(const char* flight_mode){

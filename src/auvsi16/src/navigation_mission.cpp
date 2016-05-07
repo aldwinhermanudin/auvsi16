@@ -37,7 +37,7 @@ int main(int argc, char **argv){
 	usleep(100000);
     changePID(0.3, 0, 0);
 	
-	image_transport::Subscriber sub_video 	 = it.subscribe("/auvsi16/video", 1, imageReceiveCB); // Topik subscribe: auvsi16/video
+	image_transport::Subscriber sub_video 	 = it.subscribe("/auvsi16/video/front", 1, imageReceiveCB); // Topik subscribe: auvsi16/video
 	ros::Subscriber sub_sonar_data = nh.subscribe("auvsi16/sonar_data", 1, sonarDataCB);
 	ros::Subscriber sub_gps_vel = nh.subscribe("/mavros/global_position/raw/gps_vel", 1, gpsVelocityCB);
 		

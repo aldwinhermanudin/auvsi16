@@ -40,8 +40,8 @@ int main(int argc, char **argv)
   cv::namedWindow("Front Camera", cv::WINDOW_NORMAL);
   cv::namedWindow("Right Camera", cv::WINDOW_NORMAL);
   cv::startWindowThread();
-  ros::Subscriber sub_front = nh.subscribe("auvsi16/video/front/resize/compressed", 1, imageFrontCallback,ros::TransportHints().unreliable()); // setting queue to 1 remove delay in compressedImage data | also using UDP
-  ros::Subscriber sub_right = nh.subscribe("auvsi16/video/right/resize/compressed", 1, imageRightCallback,ros::TransportHints().unreliable()); // setting queue to 1 remove delay in compressedImage data | also using UDP
+  ros::Subscriber sub_front = nh.subscribe("auvsi16/video/front/upstream", 1, imageFrontCallback,ros::TransportHints().unreliable()); // setting queue to 1 remove delay in compressedImage data | also using UDP
+  ros::Subscriber sub_right = nh.subscribe("auvsi16/video/right/upstream", 1, imageRightCallback,ros::TransportHints().unreliable()); // setting queue to 1 remove delay in compressedImage data | also using UDP
   ros::spin();
   cv::destroyWindow("Front Camera");
   cv::destroyWindow("Right Camera");
