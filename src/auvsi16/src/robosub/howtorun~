@@ -1,2 +1,0 @@
- rosrun auvsi16 shape_detection_and_video_upstream _capture_type:=1 _jpeg_quaty:=1 _video_port:=1
-

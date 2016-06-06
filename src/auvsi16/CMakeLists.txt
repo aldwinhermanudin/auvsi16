@@ -192,6 +192,14 @@ target_link_libraries(wp_updater
 	${GeographicLib_LIBRARIES}
 )
 
+add_executable(heartbeat src/heartbeat.cpp )
+
+target_link_libraries(heartbeat
+	${catkin_LIBRARIES}
+	${OpenCV_LIBRARIES}
+	${GeographicLib_LIBRARIES}
+)
+
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(auvsi16_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

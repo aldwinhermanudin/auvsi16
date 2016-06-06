@@ -55,6 +55,7 @@ void overrideRCControl			(int setpoint, int input_x, int base_speed, int steer_c
 bool sendWaypointList			();
 void clearWaypointList			();	
 void addWaypoint				(double latitude, double longitude);
+bool moveToHeading(int shift_x, int heading);
 
 double 						pid_out;
 double 						compass_hdg;
@@ -211,6 +212,18 @@ bool moveForward(int shift_x){
 	else {
 		return false;
 	}
+}
+
+bool moveToHeading(int shift_x, int heading){
+	long double x_target;
+	long double y_target;
+	double target_latitude;
+	double target_longitude;
+	
+	positionEstimation(shift_x,heading,&x_target, &y_target);
+	calculateCoordinate(global_position.latitude, global_position.longitude, global_position.altitude, &target_latitude,&target_longitude,x_target,y_target);
+	
+	addWaypoint(target_latitude, target_longitude);	// add waypoint to list
 }
 
 void clearWaypointList(){
