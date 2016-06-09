@@ -25,6 +25,8 @@ find_package(GeographicLib 1.46 REQUIRED)
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
 # catkin_python_setup()
 
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++0x")
+
 ################################################
 ## Declare ROS messages, services and actions ##
 ################################################
@@ -148,57 +150,11 @@ add_executable(docking_mission src/docking_mission.cpp)
 add_executable(override_monitor src/override_monitor.cpp)
 add_executable(ground_monitor src/ground_monitor.cpp)
 add_executable(waypoint_set_server src/waypoint_set_server.cpp )
-
-
-add_executable(robosub_monitor src/robosub/robosub_monitor.cpp)
-add_executable(shape_detection_and_video_upstream src/robosub/shape_detection_and_video_upstream.cpp)
+add_executable(heartbeat src/heartbeat.cpp )
+add_executable(run_course src/run_course.cpp )
 
 ## Declare a C++ executable for testing
-add_executable(unit_test src/testing/unit_test.cpp)
 
-target_link_libraries(unit_test
-	${catkin_LIBRARIES}
-	${OpenCV_LIBRARIES}
-	${GeographicLib_LIBRARIES}
-)
-
-add_executable(gps_calculation src/testing/gps_calculation.cpp)
-
-target_link_libraries(gps_calculation
-	${catkin_LIBRARIES}
-	${OpenCV_LIBRARIES}
-	${GeographicLib_LIBRARIES}
-)
-
-add_executable(video_publisher_trial src/testing/video_publisher_trial.cpp)
-
-target_link_libraries(video_publisher_trial
-	${catkin_LIBRARIES}
-	${OpenCV_LIBRARIES}
-)
-
-add_executable(ground_monitor_trial src/testing/ground_monitor_trial.cpp )
-
-target_link_libraries(ground_monitor_trial
-	${catkin_LIBRARIES}
-	${OpenCV_LIBRARIES}
-)
-
-add_executable(wp_updater src/testing/wp_updater.cpp )
-
-target_link_libraries(wp_updater
-	${catkin_LIBRARIES}
-	${OpenCV_LIBRARIES}
-	${GeographicLib_LIBRARIES}
-)
-
-add_executable(heartbeat src/heartbeat.cpp )
-
-target_link_libraries(heartbeat
-	${catkin_LIBRARIES}
-	${OpenCV_LIBRARIES}
-	${GeographicLib_LIBRARIES}
-)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -209,16 +165,16 @@ target_link_libraries(heartbeat
 #   ${catkin_LIBRARIES}
 # )
 
-target_link_libraries(shape_detection_and_video_upstream
+target_link_libraries(run_course
 	${catkin_LIBRARIES}
 	${OpenCV_LIBRARIES}
 	${GeographicLib_LIBRARIES}
 )
-target_link_libraries(robosub_monitor
+target_link_libraries(heartbeat
 	${catkin_LIBRARIES}
 	${OpenCV_LIBRARIES}
+	${GeographicLib_LIBRARIES}
 )
-
 
 target_link_libraries(navigation_mission
 	${catkin_LIBRARIES}

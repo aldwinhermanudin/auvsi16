@@ -36,26 +36,26 @@ using namespace cv;
 using namespace GeographicLib;
 
 void setBMFConfiguration		(ros::NodeHandle nh_main);
-void pidOutCB					(const pid::controller_msg& msg);
-void pidConstantCB				(const pid::pid_const_msg& msg);
-void compassCB					(const std_msgs::Float64& msg);
-void globalPositionCB			(const sensor_msgs::NavSatFix& msg);
+void pidOutCB								(const pid::controller_msg& msg);
+void pidConstantCB					(const pid::pid_const_msg& msg);
+void compassCB							(const std_msgs::Float64& msg);
+void globalPositionCB				(const sensor_msgs::NavSatFix& msg);
 
-bool changeFlightMode			(const char* flight_mode);
+bool changeFlightMode				(const char* flight_mode);
 void calculateCoordinate		(const double lat0, const double lon0, const  double h0, double *lat_target,double *lon_target,double x_target, double y_target);
 
 void positionEstimation			(float distance, float angle, long double *x_final, long double *y_final);
-bool areaCheck					(int input_x, int setpoint, int area_limit);
-bool moveForward				(int shift_x);
-void motorControl				(int setpoint, int input_x, int base_speed, int steer_correction);
-double calculateCenterLine		(int first_x, int second_x);
-void changePID					(float Kp_input, float Ki_input, float Kd_input);
-void headingControl				(int heading, int setpoint_heading);
+bool areaCheck							(int input_x, int setpoint, int area_limit);
+bool moveForward						(int shift_x);
+void motorControl						(int setpoint, int input_x, int base_speed, int steer_correction);
+double calculateCenterLine	(int first_x, int second_x);
+void changePID							(float Kp_input, float Ki_input, float Kd_input);
+void headingControl					(int heading, int setpoint_heading);
 void overrideRCControl			(int setpoint, int input_x, int base_speed, int steer_correction);
-bool sendWaypointList			();
-void clearWaypointList			();	
-void addWaypoint				(double latitude, double longitude);
-bool moveToHeading(int shift_x, int heading);
+bool sendWaypointList				();
+void clearWaypointList			();
+void addWaypoint						(double latitude, double longitude);
+bool moveToHeading					(int shift_x, int heading);
 
 double 						pid_out;
 double 						compass_hdg;
@@ -81,10 +81,10 @@ void setBMFConfiguration(ros::NodeHandle nh_main){
 	pub_pid_in 		= nh_main.advertise<pid::plant_msg>("/auvsi16/pid/in", 1);
 	pub_pid_const 	= nh_main.advertise<pid::pid_const_msg>("/auvsi16/pid/constant", 1,true);
 	pub_ovrd_mtr	= nh_main.advertise<auvsi16::overrideMotorRC>("/auvsi16/overrideMotorRC", 1);
-	
+
 	client_wp_set 			= nh_main.serviceClient<auvsi16::waypointSet>("/auvsi16/waypoint_set_server");
 	client_set_flightmode 	= nh_main.serviceClient<mavros_msgs::SetMode>("/mavros/set_mode");
-	
+
 	// move subscriber declaration to global
 	sub_pid_out				 = nh_main.subscribe("/auvsi16/pid/out", 1, pidOutCB);
 	sub_pid_constant		 = nh_main.subscribe("/auvsi16/pid/constant", 1, pidConstantCB);
@@ -100,24 +100,24 @@ void pidConstantCB(const pid::pid_const_msg& msg){
 }
 
 void pidOutCB(const pid::controller_msg& pid_out_recv){
-	
+
 	pid_out = pid_out_recv.u;
 }
 
 void compassCB(const std_msgs::Float64& msg){
-	
-	compass_hdg = msg.data;	
+
+	compass_hdg = msg.data;
 }
 
 void globalPositionCB(const sensor_msgs::NavSatFix& msg){
-	
+
 	global_position.latitude = msg.latitude;
 	global_position.longitude = msg.longitude;
 	global_position.altitude = msg.altitude;
 }
 
 void changePID(float Kp_input, float Ki_input, float Kd_input){
-	
+
 	if(Kp_input != pid_const.p || Ki_input != pid_const.i || Kd_input != pid_const.d){
 		pid_const.p = Kp_input;
 		pid_const.i = Ki_input;
@@ -127,18 +127,18 @@ void changePID(float Kp_input, float Ki_input, float Kd_input){
 }
 
 void motorControl(int setpoint, int input_x, int base_speed, int steer_correction){
-	
+
 	pid::plant_msg pid_in;
 	auvsi16::overrideMotorRC motor_control;
 	double delta_t = 0.01;
 	pid_in.setpoint = setpoint;
 	pid_in.x = input_x;
 	pid_in.t = pid_in.t+delta_t;
-		
+
 	pub_pid_in.publish(pid_in);
-		
+
 	ros::spinOnce();
-		
+
 	motor_control.steering = 1526 + (steer_correction + pid_out); // negative for left turn, positif for right turn
 	motor_control.throttle = base_speed;
 	pub_ovrd_mtr.publish(motor_control);
@@ -146,32 +146,32 @@ void motorControl(int setpoint, int input_x, int base_speed, int steer_correctio
 
 
 double calculateCenterLine(int first_x, int second_x){
-	
+
 	int left_x, right_x;
 	if(first_x > second_x){
 		left_x = second_x;
 		right_x = first_x;
 	}
-	
+
 	else {
 		left_x = first_x;
 		right_x = second_x;
 	}
-	
+
 	double center_line = abs(left_x - right_x)/2 + left_x;
-	
+
 	return center_line;
 }
 
 bool areaCheck(int input_x, int setpoint, int area_limit){
-	
+
 	int lower_limit = setpoint - area_limit;
 	int upper_limit = setpoint + area_limit;
-	
+
 	if(input_x <= upper_limit && input_x >= lower_limit){
 		return true;
 	}
-	
+
 	else {
 		return false;
 	}
@@ -187,7 +187,7 @@ void calculateCoordinate(const double lat0, const double lon0, const double h0, 
   Geocentric earth(Constants::WGS84_a(), Constants::WGS84_f());
   LocalCartesian proj(lat0, lon0, h0, earth);
   double h_target; // target location
-      
+
   // Sample reverse calculation
   proj.Reverse(x_target, y_target, 0, *lat_target, *lon_target, h_target);
 }
@@ -197,18 +197,18 @@ bool moveForward(int shift_x){
 	long double y_target;
 	double target_latitude;
 	double target_longitude;
-	
+
 	positionEstimation(shift_x,compass_hdg,&x_target, &y_target);
 	calculateCoordinate(global_position.latitude, global_position.longitude, global_position.altitude, &target_latitude,&target_longitude,x_target,y_target);
-	
+
 	clearWaypointList();	// clear waypoint list
 	addWaypoint(target_latitude, target_longitude);	// add waypoint to list
 	bool success_set = sendWaypointList();	// send waypoint to fcu
-	
+
 	// Check for success and use the response .
 	if(success_set){
 		return true;
-	} 
+	}
 	else {
 		return false;
 	}
@@ -219,15 +219,15 @@ bool moveToHeading(int shift_x, int heading){
 	long double y_target;
 	double target_latitude;
 	double target_longitude;
-	
+
 	positionEstimation(shift_x,heading,&x_target, &y_target);
 	calculateCoordinate(global_position.latitude, global_position.longitude, global_position.altitude, &target_latitude,&target_longitude,x_target,y_target);
-	
+
 	addWaypoint(target_latitude, target_longitude);	// add waypoint to list
 }
 
 void clearWaypointList(){
-	
+
 	mavros_msgs::Waypoint home_waypoint;
 	home_waypoint.frame = 0;
 	home_waypoint.command = 16;
@@ -240,14 +240,14 @@ void clearWaypointList(){
 	home_waypoint.x_lat = 0;
 	home_waypoint.y_long = 0;
 	home_waypoint.z_alt = 0;
-			
+
 	waypoint_list.waypoints.clear();
 	waypoint_list.waypoints.push_back(home_waypoint);
-	
+
 }
-	
+
 void addWaypoint(double latitude, double longitude){
-	
+
 	mavros_msgs::Waypoint waypoint_input;
 	waypoint_input.frame = 3;
 	waypoint_input.command = 16;
@@ -261,12 +261,12 @@ void addWaypoint(double latitude, double longitude){
 	waypoint_input.y_long = longitude;
 	waypoint_input.z_alt = 0;
 
-	waypoint_list.waypoints.push_back(waypoint_input);	
-	
+	waypoint_list.waypoints.push_back(waypoint_input);
+
 }
 
 bool sendWaypointList(){
-	
+
 	auvsi16::waypointSet wp_set;
 	wp_set.request.waypoints = waypoint_list.waypoints;
 	bool success_call = client_wp_set.call(wp_set);
@@ -284,7 +284,7 @@ bool changeFlightMode(const char* flight_mode){
 	if(success){
 		return true;
 		//ROS_INFO_STREAM( "Flight Mode changed to "<< flight.request.custom_mode ) ;
-	} 
+	}
 	else {
 		return  false;
 		//ROS_ERROR_STREAM( "Failed to changed." ) ;
@@ -305,7 +305,7 @@ void headingControl(int heading, int setpoint_heading){
 	else if (delta_360_degree > delta_zero_degree){
 		heading = delta_zero_degree; //turn right
 	}
-	
+
 	motorControl(0, heading, BASESPEED, 0); // pid controller, (Setpoint - X)
 }
 
@@ -315,11 +315,11 @@ void overrideRCControl(int setpoint, int input_x, int base_speed, int steer_corr
 		error = input_x - setpoint;
 		input_x = setpoint - error;
 	}
-	
+
 	else if(input_x < setpoint){
 		error = setpoint - input_x;
 		input_x = setpoint + error;
 	}
-	
-	motorControl(setpoint, input_x, base_speed, steer_correction);		
+
+	motorControl(setpoint, input_x, base_speed, steer_correction);
 }
