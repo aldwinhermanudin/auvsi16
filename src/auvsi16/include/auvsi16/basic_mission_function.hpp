@@ -24,8 +24,9 @@
 #include "mavros_msgs/WaypointList.h"
 #include "mavros_msgs/SetMode.h"
 #include "mavros_msgs/VFR_HUD.h"
-#include "auvsi16/waypointSet.h"
 #include "geometry_msgs/TwistStamped.h"
+#include <boost/shared_ptr.hpp>
+#include "waypoint_sender.hpp"
 
 #define BASESPEED 	1495
 #define YES 		1
@@ -52,8 +53,6 @@ double calculateCenterLine	(int first_x, int second_x);
 void changePID							(float Kp_input, float Ki_input, float Kd_input);
 void headingControl					(int heading, int setpoint_heading);
 void overrideRCControl			(int setpoint, int input_x, int base_speed, int steer_correction);
-bool sendWaypointList				();
-void clearWaypointList			();
 void addWaypoint						(double latitude, double longitude);
 bool moveToHeading					(int shift_x, int heading);
 
@@ -62,17 +61,16 @@ double 						compass_hdg;
 sensor_msgs::NavSatFix		global_position;
 pid::pid_const_msg			pid_const;
 cv::Mat 					image_received;
-mavros_msgs::WaypointList 	waypoint_list;
 
 ros::Publisher			pub_pid_in ;
 ros::Publisher 			pub_pid_const ;
 ros::Publisher 			pub_ovrd_mtr;
-ros::ServiceClient 		client_wp_set;
-ros::ServiceClient 		client_set_flightmode;
+ros::ServiceClient 	client_set_flightmode;
 ros::Subscriber 		sub_pid_out;
 ros::Subscriber 		sub_pid_constant;
 ros::Subscriber 		sub_compass;
 ros::Subscriber 		sub_global_position;
+boost::shared_ptr<WaypointSender> wp_sender;
 
 double t_IC = 0.0;
 
@@ -82,7 +80,6 @@ void setBMFConfiguration(ros::NodeHandle nh_main){
 	pub_pid_const 	= nh_main.advertise<pid::pid_const_msg>("/auvsi16/pid/constant", 1,true);
 	pub_ovrd_mtr	= nh_main.advertise<auvsi16::overrideMotorRC>("/auvsi16/overrideMotorRC", 1);
 
-	client_wp_set 			= nh_main.serviceClient<auvsi16::waypointSet>("/auvsi16/waypoint_set_server");
 	client_set_flightmode 	= nh_main.serviceClient<mavros_msgs::SetMode>("/mavros/set_mode");
 
 	// move subscriber declaration to global
@@ -90,6 +87,8 @@ void setBMFConfiguration(ros::NodeHandle nh_main){
 	sub_pid_constant		 = nh_main.subscribe("/auvsi16/pid/constant", 1, pidConstantCB);
 	sub_compass				 = nh_main.subscribe("/mavros/global_position/compass_hdg", 1, compassCB);
 	sub_global_position		 = nh_main.subscribe("/mavros/global_position/global", 1, globalPositionCB);
+
+	wp_sender.reset(new WaypointSender());
 }
 
 void pidConstantCB(const pid::pid_const_msg& msg){
@@ -201,9 +200,9 @@ bool moveForward(int shift_x){
 	positionEstimation(shift_x,compass_hdg,&x_target, &y_target);
 	calculateCoordinate(global_position.latitude, global_position.longitude, global_position.altitude, &target_latitude,&target_longitude,x_target,y_target);
 
-	clearWaypointList();	// clear waypoint list
-	addWaypoint(target_latitude, target_longitude);	// add waypoint to list
-	bool success_set = sendWaypointList();	// send waypoint to fcu
+	wp_sender->clearWaypointList();	// clear waypoint list
+	wp_sender->addWaypoint(target_latitude, target_longitude);	// add waypoint to list
+	bool success_set = wp_sender->sendWaypointList();	// send waypoint to fcu
 
 	// Check for success and use the response .
 	if(success_set){
@@ -223,55 +222,7 @@ bool moveToHeading(int shift_x, int heading){
 	positionEstimation(shift_x,heading,&x_target, &y_target);
 	calculateCoordinate(global_position.latitude, global_position.longitude, global_position.altitude, &target_latitude,&target_longitude,x_target,y_target);
 
-	addWaypoint(target_latitude, target_longitude);	// add waypoint to list
-}
-
-void clearWaypointList(){
-
-	mavros_msgs::Waypoint home_waypoint;
-	home_waypoint.frame = 0;
-	home_waypoint.command = 16;
-	home_waypoint.is_current = false;
-	home_waypoint.autocontinue = true;
-	home_waypoint.param1 = 0;
-	home_waypoint.param2 = 0;
-	home_waypoint.param3 = 0;
-	home_waypoint.param4 = 0;
-	home_waypoint.x_lat = 0;
-	home_waypoint.y_long = 0;
-	home_waypoint.z_alt = 0;
-
-	waypoint_list.waypoints.clear();
-	waypoint_list.waypoints.push_back(home_waypoint);
-
-}
-
-void addWaypoint(double latitude, double longitude){
-
-	mavros_msgs::Waypoint waypoint_input;
-	waypoint_input.frame = 3;
-	waypoint_input.command = 16;
-	waypoint_input.is_current = true;
-	waypoint_input.autocontinue = true;
-	waypoint_input.param1 = 0;
-	waypoint_input.param2 = 0;
-	waypoint_input.param3 = 0;
-	waypoint_input.param4 = 0;
-	waypoint_input.x_lat = latitude;
-	waypoint_input.y_long = longitude;
-	waypoint_input.z_alt = 0;
-
-	waypoint_list.waypoints.push_back(waypoint_input);
-
-}
-
-bool sendWaypointList(){
-
-	auvsi16::waypointSet wp_set;
-	wp_set.request.waypoints = waypoint_list.waypoints;
-	bool success_call = client_wp_set.call(wp_set);
-	clearWaypointList();
-	return success_call ;
+	wp_sender->addWaypoint(target_latitude, target_longitude);	// add waypoint to list
 }
 
 bool changeFlightMode(const char* flight_mode){

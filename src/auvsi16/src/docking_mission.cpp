@@ -1,4 +1,6 @@
 #include "../include/auvsi16/basic_mission_function.hpp"
+#include "std_msgs/String.h"
+#include "std_msgs/Int32.h"
 
 void 	gpsVelocityCB							(const geometry_msgs::TwistStamped& msg);
 void 	dockingGPSCB							(const mavros_msgs::Waypoint& msg);
@@ -14,6 +16,7 @@ void 	initializeDockingMission	(double distance_from_triangle, double distance_f
 void 	imageProcessingDebug			();
 void 	imageProcessingDisplay		(Mat canny_detect);
 void 	resetDockingPoint					();
+void nodeSelectCB								(const std_msgs::String& msg);
 
 int			iLowH 		= 0;	// yellow = 15, red = 166 , blue = 92
 int 		iHighH 		= 179;	// yellow = 29, red = 179 , blue = 114
@@ -32,6 +35,8 @@ bool										dock_gps_status = false;
 double 									docking_coordinates_latitude[3];
 double									docking_coordinates_longitude[3];
 mavros_msgs::Waypoint 	center_dock_gps;
+std_msgs::String node_status;
+std_msgs::String node_feedback;
 
 double shape_coordinates_latitude[3];
 double shape_coordinates_longitude[3];
@@ -66,6 +71,11 @@ int main(int argc, char **argv){
 	ros::Subscriber 						sub_gps_vel 		= nh.subscribe("/mavros/global_position/raw/gps_vel", 1, gpsVelocityCB);
 	ros::Subscriber 						sub_docking_gps = nh.subscribe("/auvsi16/mission/docking", 1, dockingGPSCB);
 
+	ros::Publisher pub_run_status		= nh.advertise<std_msgs::String>("/auvsi16/mission/docking/status", 16);
+	ros::Publisher pub_node_select = nh.advertise<std_msgs::String>("/auvsi16/node/select", 16,true);
+	ros::Subscriber sub_node_select 			= nh.subscribe("/auvsi16/node/select", 10, nodeSelectCB);
+
+
 	namedWindow("Image Canny", CV_WINDOW_NORMAL); //create a window called "Thresholded Image"
 	namedWindow("Image", CV_WINDOW_NORMAL); //create a window called "Thresholded Image"
 
@@ -74,13 +84,18 @@ int main(int argc, char **argv){
 	int distance_to_away		= 10;
 	int detection_accuracy  = 15;
 
+	ROS_WARN_STREAM("Waiting for docking mission selected.");
+	while (ros::ok() && node_status.data.compare("dm:docking.start") != 0){
+				ros::spinOnce();
+	}
+
 	initializeDockingMission(distance_from_shape,20);
 
 	bool first_cross_status		= false;
 	bool triangle_status			= false;
 	bool second_cross_status	= false;
 
-	clearWaypointList();	// clear waypoint list
+	wp_sender->clearWaypointList();	// clear waypoint list
 
 	while(ros::ok() && !first_cross_status){
 
@@ -101,7 +116,7 @@ int main(int argc, char **argv){
 				positionEstimation(distance_to_away,heading_zero,&x_target, &y_target);
 				calculateCoordinate(global_position.latitude, global_position.longitude, global_position.altitude, &target_latitude,&target_longitude,x_target,y_target);
 
-				addWaypoint(target_latitude, target_longitude);	// add waypoint to list
+				wp_sender->addWaypoint(target_latitude, target_longitude);	// add waypoint to list
 			}
 
 			{
@@ -113,7 +128,7 @@ int main(int argc, char **argv){
 				positionEstimation(distance_to_dock,heading_triangle,&x_target, &y_target);
 				calculateCoordinate(global_position.latitude, global_position.longitude, global_position.altitude, &target_latitude,&target_longitude,x_target,y_target);
 
-				addWaypoint(target_latitude, target_longitude);	// add waypoint to list
+				wp_sender->addWaypoint(target_latitude, target_longitude);	// add waypoint to list
 			}
 
 			first_cross_status = true;
@@ -143,7 +158,7 @@ int main(int argc, char **argv){
 				positionEstimation(distance_to_away,heading_zero,&x_target, &y_target);
 				calculateCoordinate(global_position.latitude, global_position.longitude, global_position.altitude, &target_latitude,&target_longitude,x_target,y_target);
 
-				addWaypoint(target_latitude, target_longitude);	// add waypoint to list
+				wp_sender->addWaypoint(target_latitude, target_longitude);	// add waypoint to list
 			}
 
 			{
@@ -155,7 +170,7 @@ int main(int argc, char **argv){
 				positionEstimation(distance_to_dock,heading_triangle,&x_target, &y_target);
 				calculateCoordinate(global_position.latitude, global_position.longitude, global_position.altitude, &target_latitude,&target_longitude,x_target,y_target);
 
-				addWaypoint(target_latitude, target_longitude);	// add waypoint to list
+				wp_sender->addWaypoint(target_latitude, target_longitude);	// add waypoint to list
 			}
 
 			triangle_status = true;
@@ -186,7 +201,7 @@ int main(int argc, char **argv){
 				positionEstimation(distance_to_away,heading_zero,&x_target, &y_target);
 				calculateCoordinate(global_position.latitude, global_position.longitude, global_position.altitude, &target_latitude,&target_longitude,x_target,y_target);
 
-				addWaypoint(target_latitude, target_longitude);	// add waypoint to list
+				wp_sender->addWaypoint(target_latitude, target_longitude);	// add waypoint to list
 			}
 
 			{
@@ -198,7 +213,7 @@ int main(int argc, char **argv){
 				positionEstimation(distance_to_dock,heading_triangle,&x_target, &y_target);
 				calculateCoordinate(global_position.latitude, global_position.longitude, global_position.altitude, &target_latitude,&target_longitude,x_target,y_target);
 
-				addWaypoint(target_latitude, target_longitude);	// add waypoint to list
+				wp_sender->addWaypoint(target_latitude, target_longitude);	// add waypoint to list
 			}
 
 			second_cross_status = true;
@@ -216,7 +231,7 @@ int main(int argc, char **argv){
 
 	sleep(5);
 
-	bool success_set = sendWaypointList();	// send waypoint to fcu
+	bool success_set = wp_sender->sendWaypointList();	// send waypoint to fcu
 	// Check for success and use the response .
 	if(success_set){
 		ROS_INFO_STREAM("Set Waypoint Success");
@@ -225,8 +240,9 @@ int main(int argc, char **argv){
 		ROS_INFO_STREAM("Set Waypoint Failed");
 	}
 
+	node_feedback.data = "nc:docking.end";
+  pub_node_select.publish(node_feedback);
 	ros::shutdown();
-
 }
 
 void dockingMissionExec(){
@@ -455,11 +471,11 @@ void setDockingWaypoint(double x_dock_gps, double y_dock_gps, double distance_fr
 	positionEstimation(distance_from_zero,heading_two,&x_target, &y_target);
 	calculateCoordinate(docking_coordinates_latitude[0], docking_coordinates_longitude[0], 0, &docking_coordinates_latitude[2],&docking_coordinates_longitude[2],x_target,y_target);
 
-	clearWaypointList();
-	addWaypoint(docking_coordinates_latitude[1], docking_coordinates_longitude[1]);
-	addWaypoint(docking_coordinates_latitude[0], docking_coordinates_longitude[0]);
-	addWaypoint(docking_coordinates_latitude[2], docking_coordinates_longitude[2]);
-	sendWaypointList();
+	wp_sender->clearWaypointList();
+	wp_sender->addWaypoint(docking_coordinates_latitude[1], docking_coordinates_longitude[1]);
+	wp_sender->addWaypoint(docking_coordinates_latitude[0], docking_coordinates_longitude[0]);
+	wp_sender->addWaypoint(docking_coordinates_latitude[2], docking_coordinates_longitude[2]);
+	wp_sender->sendWaypointList();
 }
 
 void sonarDataCB(const auvsi16::sonarData& sonar_recv){
@@ -525,4 +541,10 @@ void resetDockingPoint(){
 	buoy_area			= 0;
 	radius_buoy		= 0;
 	buoy_number  	= 0;
+}
+
+
+void nodeSelectCB(const std_msgs::String& msg){
+
+	node_status.data = msg.data;
 }

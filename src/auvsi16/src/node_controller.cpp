@@ -1,66 +1,56 @@
-#include "ros/ros.h"
-
-#include "mavros_msgs/OverrideRCIn.h"
-#include "mavros_msgs/RCIn.h"
-#include <string>
-#include <string.h>
+#include <ros/ros.h>
+#include "std_msgs/String.h"
 #include <iostream>
 #include <stdlib.h>
 #include <unistd.h>
+#include "../include/auvsi16/auvsicommunication.hpp"
 
 using namespace std;
 
-int rc_failsafe_override_flag = 0;
-int rc_in_data_channel[8];
-int channel_7_mid = 1500;
-// channel_7_off = 987 | channel_7_on = 2010
+void nodeSelectCB(const std_msgs::String& msg);
+	std_msgs::String node_select;
+
+	int main(int argc, char **argv){
+
+	ros::init(argc, argv, "node_controller");
+	ros::NodeHandle nh;
+
+	ros::Publisher pub_node_select  = nh.advertise<std_msgs::String>("/auvsi16/node/select", 16);
+	ros::Subscriber sub_node_select	= nh.subscribe("/auvsi16/node/select", 10, nodeSelectCB);
 
 
-void rcinReceiver(const mavros_msgs::RCIn& rc_in_data);
+		ROS_INFO_STREAM("Sending Run Course Command.");
+		node_select.data = "start_run";
+		pub_node_select.publish(node_select);
 
-ros::Publisher pub_rc_override;
-ros::Publisher pub_override_status;
-mavros_msgs::OverrideRCIn rc_override_data;
-std_msgs::Bool override_data;
+		while(ros::ok() && node_select.data.compare("nc:node_select.start_run.ok") != 0) ros::spinOnce();
 
-int main(int argc, char **argv){
+		ROS_INFO_STREAM("Launching Navigation Mission.");
+		node_select.data = "nm:navigation.start";
+		pub_node_select.publish(node_select);
 
-	ros::init(argc, argv, "system_controller");
-	ros::NodeHandle sys_ctrl;
-	ros::Subscriber rc_in_sub 	= sys_ctrl.subscribe("/mavros/rc/in", 1, rcinReceiver);
-	pub_override_status 		= sys_ctrl.advertise<std_msgs::Bool>("auvsi16/override_status", 1);
-	pub_rc_override				= sys_ctrl.advertise<mavros_msgs::OverrideRCIn>("/mavros/rc/override", 1, true);
-	ROS_INFO("Starting System Monitor.");
-	// set initial state for rc override take over.
-	if(rc_in_data_channel[6] < channel_7_mid){
-			rc_failsafe_override_flag = 0;
-	}
-	else if (rc_in_data_channel[6] > channel_7_mid){
-			rc_failsafe_override_flag = 1;
-	}
-	
-	ros::spin();
-  
-  return 0;
+		while(ros::ok() && node_select.data.compare("nc:navigation.end") != 0) ros::spinOnce();
+
+		ROS_INFO_STREAM("Launching Docking Mission.");
+		node_select.data = "nc:docking.start";
+		pub_node_select.publish(node_select);
+
+		while(ros::ok() && node_select.data.compare("nc:docking.end") != 0) ros::spinOnce();
+
+		ROS_INFO_STREAM("Launching Interoperability Mission.");
+		node_select.data = "nc:interoperability.start";
+		pub_node_select.publish(node_select);
+
+		while(ros::ok() && node_select.data.compare("nc:interoperability.end") != 0) ros::spinOnce();
+
+		ROS_INFO_STREAM("Ending Course.");
+		node_select.data = "end_run";
+		pub_node_select.publish(node_select);
+
+		while(ros::ok() && node_select.data.compare("nc:node_select.end_run.ok") != 0) ros::spinOnce();
+
 }
 
-void rcinReceiver(const mavros_msgs::RCIn& rc_in_data){
-	int x;
-	for (x = 0; x<8;x++){
-		rc_in_data_channel[x] = rc_in_data.channels[x];
-	}
-	
-	if(rc_in_data_channel[6] < channel_7_mid && rc_failsafe_override_flag == 0){
-		for(int i=0; i < 8; i++) rc_override_data.channels[i] = 0;
-		
-		pub_rc_override.publish(rc_override_data);
-		rc_failsafe_override_flag = 1;
-		ROS_ERROR_STREAM( "[NC] RC is now taking over!") ;
-	}
-	
-	else if (rc_in_data_channel[6] > channel_7_mid && rc_failsafe_override_flag == 1){
-		rc_failsafe_override_flag = 0;
-		ROS_ERROR_STREAM( "[NC] Drone is now taking over") ;
-	}
-	
+void nodeSelectCB(const std_msgs::String& msg){
+	node_select.data = msg.data;
 }

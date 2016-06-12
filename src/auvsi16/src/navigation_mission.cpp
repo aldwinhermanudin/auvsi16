@@ -1,6 +1,8 @@
 #include "../include/auvsi16/basic_mission_function.hpp"
+#include <std_msgs/String.h>
 #define TESTING NO
 
+void nodeSelectCB(const std_msgs::String& msg);
 void 	gpsVelocityCB		(const geometry_msgs::TwistStamped& msg);
 void 	sonarDataCB			(const auvsi16::sonarData& msg);
 void 	imageReceiveCB	(const sensor_msgs::ImageConstPtr& msg);
@@ -14,6 +16,8 @@ int 		second_buoy_x				= 0;
 int			second_buoy_y 			= 0;
 double 	second_buoy_area		= 0;
 double 	second_buoy_radius	= 0;
+std_msgs::String node_status;
+std_msgs::String node_feedback;
 
 double gps_vel_x;
 double gps_vel_y;
@@ -41,10 +45,21 @@ int main(int argc, char **argv){
 	ros::Subscriber sub_sonar_data = nh.subscribe("auvsi16/sonar_data", 1, sonarDataCB);
 	ros::Subscriber sub_gps_vel = nh.subscribe("/mavros/global_position/raw/gps_vel", 1, gpsVelocityCB);
 
+	ros::Publisher pub_run_status		= nh.advertise<std_msgs::String>("/auvsi16/mission/navigation/status", 16);
+	ros::Publisher pub_node_select = nh.advertise<std_msgs::String>("/auvsi16/node/select", 16,true);
+	ros::Subscriber sub_node_select 			= nh.subscribe("/auvsi16/node/select", 10, nodeSelectCB);
+
+
 	#if TESTING == YES
 	ros::Subscriber sub_input_heading = nh.subscribe("auvsi16/testing/input_heading", 1, inputHeadingCB);
 	changePID(3.5, 0, 0);
 	#endif
+
+
+	ROS_WARN_STREAM("Waiting for navigation mission selected.");
+	while (ros::ok() && node_status.data.compare("nm:navigation.start") != 0){
+				ros::spinOnce();
+	}
 
 	// this it to whether image_received is empty or not, move this to a function.
 	while (ros::ok() && image_received.empty()){
@@ -91,7 +106,10 @@ int main(int argc, char **argv){
 				ROS_ERROR_STREAM("Failed changing to AUTO!");
 			}
 
-			ros::shutdown();
+
+				node_feedback.data = "nc:navigation.end";
+			  pub_node_select.publish(node_feedback);
+				ros::shutdown();
 			// if flightmode is HOLD, continue code
 		}
 		overrideRCControl(320, second_buoy_x, BASESPEED, 0);
@@ -182,4 +200,9 @@ void imageReceiveCB(const sensor_msgs::ImageConstPtr& msg){
 	catch (cv_bridge::Exception& e){
 		ROS_ERROR("Could not convert from '%s' to 'bgr8'.", msg->encoding.c_str());
 	}
+}
+
+void nodeSelectCB(const std_msgs::String& msg){
+
+	node_status.data = msg.data;
 }

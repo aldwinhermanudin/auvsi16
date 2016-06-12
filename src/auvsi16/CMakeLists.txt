@@ -60,10 +60,10 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++0x")
  )
 
 ## Generate services in the 'srv' folder
- add_service_files(
-   FILES
-   waypointSet.srv
- )
+# add_service_files(
+#   FILES
+#   waypointSet.srv
+# )
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -149,12 +149,18 @@ add_executable(navigation_mission src/navigation_mission.cpp)
 add_executable(docking_mission src/docking_mission.cpp)
 add_executable(override_monitor src/override_monitor.cpp)
 add_executable(ground_monitor src/ground_monitor.cpp)
-add_executable(waypoint_set_server src/waypoint_set_server.cpp )
 add_executable(heartbeat src/heartbeat.cpp )
 add_executable(run_course src/run_course.cpp )
+add_executable(node_controller src/node_controller.cpp )
 
 ## Declare a C++ executable for testing
 
+add_executable(waypoint_sender_class misc/ros/testing/waypoint_sender_class.cpp )
+target_link_libraries(waypoint_sender_class
+${catkin_LIBRARIES}
+${OpenCV_LIBRARIES}
+${GeographicLib_LIBRARIES}
+)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -164,6 +170,13 @@ add_executable(run_course src/run_course.cpp )
 # target_link_libraries(auvsi16_node
 #   ${catkin_LIBRARIES}
 # )
+
+
+target_link_libraries(node_controller
+${catkin_LIBRARIES}
+${OpenCV_LIBRARIES}
+${GeographicLib_LIBRARIES}
+)
 
 target_link_libraries(run_course
 	${catkin_LIBRARIES}
@@ -217,10 +230,6 @@ target_link_libraries(video_feed_front
 target_link_libraries(video_feed_upstream
 	${catkin_LIBRARIES}
 	${OpenCV_LIBRARIES}
-)
-
-target_link_libraries(waypoint_set_server
-	${catkin_LIBRARIES}
 )
 
 #############

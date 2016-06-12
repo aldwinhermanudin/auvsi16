@@ -5,7 +5,7 @@
 		<param name="camera_port" value="1" />
 		<param name="camera_width" value="640" />
 		<param name="camera_height" value="480" />
-		
+
 		<param name="v4l2_configuration" value="1" />
 		<param name="v4l2_exposure_mode" value="1" />
 		<param name="v4l2_exposure_value" value="1500" />
