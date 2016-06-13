@@ -106,7 +106,7 @@ int main(int argc, char **argv){
 		imageProcessingDebug();
 		imageProcessingDisplay(canny_detection);
 		if (areaCheck(center_buoy_x, 640, detection_accuracy)){
-
+			
 			{
 				long double x_target;
 				long double y_target;

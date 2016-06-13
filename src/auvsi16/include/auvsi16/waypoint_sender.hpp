@@ -19,6 +19,7 @@ public:
   WaypointSender          ();
   bool sendWaypointList   ();
   void setWaypointList    (mavros_msgs::WaypointList waypoint_list);
+  mavros_msgs::WaypointList getWaypointList    ();
   void clearWaypointList  ();
   void addWaypoint        (double latitude, double longitude);
   void addWaypoint        (mavros_msgs::Waypoint waypoint_input);
@@ -55,6 +56,10 @@ bool WaypointSender::sendWaypointList(){
 
 void WaypointSender::setWaypointList(mavros_msgs::WaypointList waypoint_list){
   this->waypoint_list = waypoint_list;
+}
+
+mavros_msgs::WaypointList WaypointSender::getWaypointList (){
+  return this->waypoint_list;
 }
 
 void WaypointSender::clearWaypointList(){
