@@ -9,6 +9,7 @@ using namespace std;
 
 void nodeSelectCB(const std_msgs::String& msg);
 	std_msgs::String node_select;
+	std_msgs::String challenge_status;
 
 	int main(int argc, char **argv){
 
@@ -16,38 +17,54 @@ void nodeSelectCB(const std_msgs::String& msg);
 	ros::NodeHandle nh;
 
 	ros::Publisher pub_node_select  = nh.advertise<std_msgs::String>("/auvsi16/node/select", 16);
+	ros::Publisher pub_challenge  = nh.advertise<std_msgs::String>("/auvsi16/challenge", 16, true);
 	ros::Subscriber sub_node_select	= nh.subscribe("/auvsi16/node/select", 10, nodeSelectCB);
 
 
-		ROS_INFO_STREAM("Sending Run Course Command.");
+		ROS_INFO_STREAM("Sending Run Course Command in 5 seconds");
+		sleep(5);
 		node_select.data = "start_run";
 		pub_node_select.publish(node_select);
 
-		while(ros::ok() && node_select.data.compare("nc:node_select.start_run.ok") != 0) ros::spinOnce();
+		while(ros::ok() && node_select.data != "nc:node_select.start_run.ok") ros::spinOnce();
 
-		ROS_INFO_STREAM("Launching Navigation Mission.");
+		ROS_INFO_STREAM("Launching Navigation Mission in 5 seconds");
+		sleep(5);
+
 		node_select.data = "nm:navigation.start";
 		pub_node_select.publish(node_select);
+		challenge_status.data = "gates";
+		pub_challenge.publish(challenge_status);
 
-		while(ros::ok() && node_select.data.compare("nc:navigation.end") != 0) ros::spinOnce();
+		while(ros::ok() && node_select.data != "nc:navigation.end") ros::spinOnce();
 
-		ROS_INFO_STREAM("Launching Docking Mission.");
-		node_select.data = "nc:docking.start";
+		ROS_INFO_STREAM("Launching Obstacle Mission in 5 seconds");
+		sleep(5);
+		node_select.data = "om:obstacle.start";
 		pub_node_select.publish(node_select);
+		challenge_status.data = "obstacle";
+		pub_challenge.publish(challenge_status);
 
-		while(ros::ok() && node_select.data.compare("nc:docking.end") != 0) ros::spinOnce();
 
-		ROS_INFO_STREAM("Launching Interoperability Mission.");
-		node_select.data = "nc:interoperability.start";
+		while(ros::ok() && node_select.data != "nc:obstacle.end") ros::spinOnce();
+
+		ROS_INFO_STREAM("Launching Docking Mission in 5 seconds");
+		sleep(5);
+		node_select.data = "dm:docking.start";
 		pub_node_select.publish(node_select);
+		challenge_status.data = "docking";
+		pub_challenge.publish(challenge_status);
 
-		while(ros::ok() && node_select.data.compare("nc:interoperability.end") != 0) ros::spinOnce();
+		while(ros::ok() && node_select.data != "nc:docking.end") ros::spinOnce();
 
-		ROS_INFO_STREAM("Ending Course.");
+		ROS_INFO_STREAM("Ending Course in 5 seconds");
+		sleep(5);
 		node_select.data = "end_run";
 		pub_node_select.publish(node_select);
+		challenge_status.data = "return";
+		pub_challenge.publish(challenge_status);
 
-		while(ros::ok() && node_select.data.compare("nc:node_select.end_run.ok") != 0) ros::spinOnce();
+		while(ros::ok() && node_select.data != "nc:node_select.end_run.ok") ros::spinOnce();
 
 }
 

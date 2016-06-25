@@ -1,6 +1,5 @@
 #include "../include/auvsi16/basic_mission_function.hpp"
 #include <std_msgs/String.h>
-#define TESTING NO
 
 void nodeSelectCB(const std_msgs::String& msg);
 void 	gpsVelocityCB		(const geometry_msgs::TwistStamped& msg);
@@ -25,12 +24,6 @@ double gps_vel_z;
 
 int sonar_data[13];
 
-#if TESTING == YES
-int	input_heading = 0;
-void inputHeadingCB(const std_msgs::Int32& msg){ input_heading = msg.data; }
-#endif
-
-
 int main(int argc, char **argv){
 
 	ros::init(argc, argv, "navigation_mission");
@@ -46,18 +39,11 @@ int main(int argc, char **argv){
 	ros::Subscriber sub_gps_vel = nh.subscribe("/mavros/global_position/raw/gps_vel", 1, gpsVelocityCB);
 
 	ros::Publisher pub_run_status		= nh.advertise<std_msgs::String>("/auvsi16/mission/navigation/status", 16);
-	ros::Publisher pub_node_select = nh.advertise<std_msgs::String>("/auvsi16/node/select", 16,true);
-	ros::Subscriber sub_node_select 			= nh.subscribe("/auvsi16/node/select", 10, nodeSelectCB);
-
-
-	#if TESTING == YES
-	ros::Subscriber sub_input_heading = nh.subscribe("auvsi16/testing/input_heading", 1, inputHeadingCB);
-	changePID(3.5, 0, 0);
-	#endif
-
+	ros::Publisher pub_node_select 	= nh.advertise<std_msgs::String>("/auvsi16/node/select", 16,true);
+	ros::Subscriber sub_node_select = nh.subscribe("/auvsi16/node/select", 10, nodeSelectCB);
 
 	ROS_WARN_STREAM("Waiting for navigation mission selected.");
-	while (ros::ok() && node_status.data.compare("nm:navigation.start") != 0){
+	while (ros::ok() && node_status.data != "nm:navigation.start"){
 				ros::spinOnce();
 	}
 
@@ -68,13 +54,6 @@ int main(int argc, char **argv){
 
 	while (ros::ok()){
 
-		#if TESTING == YES
-		ros::spinOnce();
-		headingControl(compass_hdg, input_heading);
-		usleep(500000); // slow things down
-		#endif
-
-		#if TESTING == NO
 		ros::spinOnce();	// read frame
 		double compass_hdg_at_capture = compass_hdg;
 		int red_buoy = imageProcessing(image_received, 166, 179,0, &second_buoy_x, &second_buoy_y, &second_buoy_area, &second_buoy_radius);
@@ -113,7 +92,7 @@ int main(int argc, char **argv){
 			// if flightmode is HOLD, continue code
 		}
 		overrideRCControl(320, second_buoy_x, BASESPEED, 0);
-		#endif
+
 	}
 }
 

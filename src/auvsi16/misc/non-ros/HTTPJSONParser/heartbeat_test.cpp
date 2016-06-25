@@ -17,13 +17,13 @@ int main() {
   string	course_type 			= "courseA";
 
   getTime time_lord;
-  StartEndRunMessage auvsi_protocol(server_ip, server_port, course_type, team_code);
+  HeartbeatMessage auvsi_protocol(server_ip, server_port, course_type, team_code);
 
-  auvsi_protocol.setPayloadCommunication(start_run);
-  auvsi_protocol.sendTCP();
+  auvsi_protocol.setPayloadCommunication(time_lord.getYMDHS(), challenge_status, 102,-123);
   cout << auvsi_protocol.getPayload() << endl << endl;
-  cout << auvsi_protocol.getRespone() << endl << endl;
-  cout << auvsi_protocol.decodedResponse() << endl;
+  auvsi_protocol.sendTCP();
+  cout << auvsi_protocol.getResponse() << endl << endl;
+  cout << auvsi_protocol.decodeResponeStatus() << endl;
 
 
   return 0;

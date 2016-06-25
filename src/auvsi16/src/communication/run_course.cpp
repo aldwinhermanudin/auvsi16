@@ -7,7 +7,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <unistd.h>
-#include "../include/auvsi16/auvsicommunication.hpp"
+#include "../../include/auvsi16/auvsicommunication.hpp"
 
 using namespace std;
 

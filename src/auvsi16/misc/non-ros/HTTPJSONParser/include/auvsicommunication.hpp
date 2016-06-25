@@ -73,7 +73,7 @@ struct JSONHandler {
     AUVSICommunication                    (string hostname_input, int port_number_input, string course_type, string team_code);
     int sendTCP                           ();
     string getPayload                     ();
-    string getRespone                     ();
+    string getResponse                    ();
     bool setRemoteTarget                  (string hostname_input, int port_number_input);
     bool setPayload                       (string input_data);
     void setReceiveTimeout                (int receive_timeout);
@@ -108,9 +108,9 @@ struct JSONHandler {
     int socket_desc;
     struct sockaddr_in server;
     socket_desc = socket(AF_INET , SOCK_STREAM , 0);
-    if (socket_desc == -1)
-    {
+    if (socket_desc == -1){
       //cout << "Could not create socket";
+      response_message = "No data";
       return -1;
     }
     server.sin_addr.s_addr = inet_addr(hostname.c_str());
@@ -119,9 +119,9 @@ struct JSONHandler {
     // ################## create socket ################## //
 
     // ################## connect to remote server ################## //
-    if (connect(socket_desc , (struct sockaddr *)&server , sizeof(server)) < 0)
-    {
+    if (connect(socket_desc , (struct sockaddr *)&server , sizeof(server)) < 0){
       //cout << "connect error\n";
+      response_message = "No data";
       return -1;
     }
 
@@ -130,9 +130,9 @@ struct JSONHandler {
 
     // ################## Send some data ################## //
     //cout << "Message size " << payload.size() << endl;
-    if( send(socket_desc , payload.c_str() , payload.size(), 0) < 0)
-    {
+    if( send(socket_desc , payload.c_str() , payload.size(), 0) < 0){
       //cout << "Send failed";
+      response_message = "No data";
       return -1;
     }
     //cout << "Data Send\n";
@@ -156,7 +156,8 @@ struct JSONHandler {
       bytesReceived = recv(socket_desc, buffer.data(), buffer.size(), 0);
       // append string from buffer.
       if ( bytesReceived == -1 ) {
-        //cout << "recv failed";
+        //cout << "recv failed
+        response_message = "No data";
         return -1;
 
       } else {
@@ -165,6 +166,7 @@ struct JSONHandler {
     } while ( bytesReceived == MAX_BUF_LENGTH );
 
     if (errno == EAGAIN){
+      response_message = "No data";
       return -1;
     }
 
@@ -189,7 +191,7 @@ struct JSONHandler {
     return payload;
   }
 
-  string AUVSICommunication::getRespone(){
+  string AUVSICommunication::getResponse(){
 
     return response_message;
   }
@@ -401,36 +403,36 @@ struct JSONHandler {
     string getGateCode();
     char getFirstGate();
     char getSecondGate();
-    };
+  };
 
-    ObstacleMessage::ObstacleMessage(string hostname, int port_number, string course_type, string team_code)
-    : ObstacleDockingMessage(hostname, port_number, course_type, team_code){}
+  ObstacleMessage::ObstacleMessage(string hostname, int port_number, string course_type, string team_code)
+  : ObstacleDockingMessage(hostname, port_number, course_type, team_code){}
 
-    bool ObstacleMessage::setPayloadCommunication(){
+  bool ObstacleMessage::setPayloadCommunication(){
     return ObstacleDockingMessage::setPayloadCommunication(communicationType::obstacle);
-    }
+  }
 
-    /*
-    *{"gateCode":"(3,Y)"}
-    gateCode <- .at(0)
-    (3,Y)   <- .at(1)
-    */
-    string ObstacleMessage::getGateCode(){
-      return this->json_handler.json_element.at(1);
-    }
+  /*
+  *{"gateCode":"(3,Y)"}
+  gateCode <- .at(0)
+  (3,Y)   <- .at(1)
+  */
+  string ObstacleMessage::getGateCode(){
+    return this->json_handler.json_element.at(1);
+  }
 
-    /*
-    *"(3,Y)"
-    3 <- .at(1)
-    Y <- .at(3)
-    */
-    char ObstacleMessage::getFirstGate(){
-      return this->getGateCode().at(1);
-    }
+  /*
+  *"(3,Y)"
+  3 <- .at(1)
+  Y <- .at(3)
+  */
+  char ObstacleMessage::getFirstGate(){
+    return this->getGateCode().at(1);
+  }
 
-    char ObstacleMessage::getSecondGate(){
+  char ObstacleMessage::getSecondGate(){
     return this->getGateCode().at(3);
-    }
+  }
 
   // ########################################## end of ObstacleMessage class ########################################## //
 

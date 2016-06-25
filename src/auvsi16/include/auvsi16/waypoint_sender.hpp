@@ -23,6 +23,7 @@ public:
   void clearWaypointList  ();
   void addWaypoint        (double latitude, double longitude);
   void addWaypoint        (mavros_msgs::Waypoint waypoint_input);
+  void addWaypoint        (mavros_msgs::WaypointList waypoint_input);
 
 };
 
@@ -104,5 +105,11 @@ void WaypointSender::addWaypoint(double latitude, double longitude){
 void WaypointSender::addWaypoint(mavros_msgs::Waypoint waypoint_input){
 
 	waypoint_list.waypoints.push_back(waypoint_input);
+}
+
+void WaypointSender::addWaypoint (mavros_msgs::WaypointList waypoint_input){
+  for (std::vector<mavros_msgs::Waypoint>::iterator it = waypoint_input.waypoints.begin() ; it != waypoint_input.waypoints.end(); ++it)
+    waypoint_list.waypoints.push_back(*it);
+  
 }
 // ########################################## start of WaypointSender class ########################################## //

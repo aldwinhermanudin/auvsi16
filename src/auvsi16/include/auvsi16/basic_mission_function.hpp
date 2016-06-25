@@ -27,6 +27,7 @@
 #include "geometry_msgs/TwistStamped.h"
 #include <boost/shared_ptr.hpp>
 #include "waypoint_sender.hpp"
+#include "interface_mavros.hpp"
 
 #define BASESPEED 	1495
 #define YES 		1

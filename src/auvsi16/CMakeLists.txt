@@ -54,9 +54,12 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++0x")
 ## Generate messages in the 'msg' folder
  add_message_files(
    FILES
+   ImageProcessing.msg
+   HSVValue.msg
    differential_controller.msg
    overrideMotorRC.msg
    sonarData.msg
+   RobosubLauncher.msg
  )
 
 ## Generate services in the 'srv' folder
@@ -141,22 +144,48 @@ include_directories(
 
 ## Declare a C++ executable
 # add_executable(auvsi16_node src/auvsi16_node.cpp)
-add_executable(video_feed_right src/video_feed_right.cpp)
-add_executable(video_feed_front src/video_feed_front.cpp)
-add_executable(video_feed_upstream src/video_feed_upstream.cpp)
+add_executable(video_feed_right src/video/video_feed_right.cpp)
+add_executable(video_feed_front src/video/video_feed_front.cpp)
+add_executable(video_feed_upstream src/video/video_feed_upstream.cpp)
+add_executable(ground_monitor src/video/ground_monitor.cpp)
+add_executable(heartbeat src/communication/heartbeat.cpp )
+add_executable(run_course src/communication/run_course.cpp )
 add_executable(motor_controller src/motor_controller.cpp)
-add_executable(navigation_mission src/navigation_mission.cpp)
-add_executable(docking_mission src/docking_mission.cpp)
 add_executable(override_monitor src/override_monitor.cpp)
-add_executable(ground_monitor src/ground_monitor.cpp)
-add_executable(heartbeat src/heartbeat.cpp )
-add_executable(run_course src/run_course.cpp )
 add_executable(node_controller src/node_controller.cpp )
 
 ## Declare a C++ executable for testing
 
-add_executable(waypoint_sender_class misc/ros/testing/waypoint_sender_class.cpp )
-target_link_libraries(waypoint_sender_class
+add_executable(image_processing src/mission/image_processing.cpp )
+target_link_libraries(image_processing
+${catkin_LIBRARIES}
+${OpenCV_LIBRARIES}
+${GeographicLib_LIBRARIES}
+)
+
+add_executable(docking_mission_control src/mission/docking_mission_control.cpp )
+target_link_libraries(docking_mission_control
+${catkin_LIBRARIES}
+${OpenCV_LIBRARIES}
+${GeographicLib_LIBRARIES}
+)
+
+add_executable(navigation_mission_control src/mission/navigation_mission_control.cpp )
+target_link_libraries(navigation_mission_control
+${catkin_LIBRARIES}
+${OpenCV_LIBRARIES}
+${GeographicLib_LIBRARIES}
+)
+
+add_executable(navigation_mission_control_simple src/mission/navigation_mission_control_simple.cpp )
+target_link_libraries(navigation_mission_control_simple
+${catkin_LIBRARIES}
+${OpenCV_LIBRARIES}
+${GeographicLib_LIBRARIES}
+)
+
+add_executable(obstacle_mission_control_simple src/mission/obstacle_mission_control_simple.cpp )
+target_link_libraries(obstacle_mission_control_simple
 ${catkin_LIBRARIES}
 ${OpenCV_LIBRARIES}
 ${GeographicLib_LIBRARIES}
@@ -184,18 +213,6 @@ target_link_libraries(run_course
 	${GeographicLib_LIBRARIES}
 )
 target_link_libraries(heartbeat
-	${catkin_LIBRARIES}
-	${OpenCV_LIBRARIES}
-	${GeographicLib_LIBRARIES}
-)
-
-target_link_libraries(navigation_mission
-	${catkin_LIBRARIES}
-	${OpenCV_LIBRARIES}
-	${GeographicLib_LIBRARIES}
-)
-
-target_link_libraries(docking_mission
 	${catkin_LIBRARIES}
 	${OpenCV_LIBRARIES}
 	${GeographicLib_LIBRARIES}
