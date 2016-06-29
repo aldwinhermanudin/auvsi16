@@ -156,13 +156,6 @@ add_executable(node_controller src/node_controller.cpp )
 
 ## Declare a C++ executable for testing
 
-add_executable(renamespaced_mavros misc/ros/testing/renamespaced_mavros.cpp )
-target_link_libraries(renamespaced_mavros
-${catkin_LIBRARIES}
-${OpenCV_LIBRARIES}
-${GeographicLib_LIBRARIES}
-)
-
 add_executable(image_processing src/mission/image_processing.cpp )
 target_link_libraries(image_processing
 ${catkin_LIBRARIES}

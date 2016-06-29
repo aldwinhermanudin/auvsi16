@@ -49,7 +49,7 @@ double 	radius_buoy		= 0;
 int 		buoy_number  	= 0;
 boost::shared_ptr<ImageProcessingInterface> imgproc_interface;
 
-string	server_ip					=	"127.0.0.1";
+string	server_ip					=	"192.168.0.103";
 int 		server_port				=	80;
 string 	team_code					=	"rooster.php";
 string	course_type 			= "courseA";

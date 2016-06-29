@@ -6,13 +6,19 @@
 #include <auvsi16/ImageProcessing.h>
 #include "mavros_msgs/State.h"
 
+#define	 MIN_GROUND_SPEED 0.2
+
 void nodeSelectCB(const std_msgs::String& msg);
 void imageProcessingCB				(const auvsi16::ImageProcessing& msg);
 void stateCB									(const mavros_msgs::State& msg);
 bool checkAUTOCruise					();
+void checkGroundSpeed					();
+bool changeFlightModeDebug		(string fm);
+void vfrHUDCB									(const mavros_msgs::VFR_HUD& msg);
 
 ros::Publisher pub_imgproc_select;
 
+double	ground_speed = 0;
 bool		imgproc_status = false;
 int 		center_buoy_x	= 0;
 int 		center_buoy_y = 0;
@@ -46,6 +52,7 @@ int main(int argc, char **argv){
 	get_gate.setTeamCode(team_code);
 	get_gate.setCourseType(course_type);
 
+	ros::Subscriber 						sub_vfr_hud 		= nh.subscribe("/mavros/vfr_hud", 1, vfrHUDCB);
 		ros::Subscriber 						sub_state 			= nh.subscribe("/mavros/state", 1, stateCB);
 
 	ros::Publisher pub_run_status		= nh.advertise<std_msgs::String>("/auvsi16/obstacle/navigation/status", 16);
@@ -98,8 +105,16 @@ int main(int argc, char **argv){
 
 		ROS_ERROR_STREAM("Failed changing to AUTO!");
 	}
-
-	while(checkAUTOCruise()) ros::spinOnce();
+	sleep(1);
+	ros::spinOnce();
+	ros::spinOnce();
+	ros::spinOnce();
+	ros::spinOnce();
+	ros::spinOnce();
+	while(checkAUTOCruise()) {
+		checkGroundSpeed();
+		ros::spinOnce();
+	}
 	node_feedback.data = "nc:obstacle.end";
 	pub_node_select.publish(node_feedback);
 	ros::shutdown();
@@ -125,6 +140,11 @@ void stateCB(const mavros_msgs::State& msg){
 	state = msg.mode;
 }
 
+void 	vfrHUDCB	(const mavros_msgs::VFR_HUD& msg){
+
+	ground_speed = msg.groundspeed;
+}
+
 bool checkAUTOCruise(){
 
 	if(state == "AUTO"){
@@ -137,4 +157,24 @@ bool checkAUTOCruise(){
 		return false;
 	}
 
+}
+
+void checkGroundSpeed(){
+	if(ground_speed < MIN_GROUND_SPEED && checkAUTOCruise() ){
+		changeFlightModeDebug("MANUAL");
+		sleep(5);
+		changeFlightModeDebug("AUTO");
+		sleep(10);
+	}
+}
+
+
+bool changeFlightModeDebug(string fm){
+	if(changeFlightMode(fm.c_str())){
+		ROS_WARN_STREAM("Changed to " << fm);
+	}
+	else {
+
+		ROS_ERROR_STREAM("Failed changing to " << fm);
+	}
 }

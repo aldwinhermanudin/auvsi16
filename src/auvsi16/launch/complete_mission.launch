@@ -1,6 +1,6 @@
 <launch>
 
-	<param name="/auvsi16/server_ip" value="192.168.0.102" />
+	<param name="/auvsi16/server_ip" value="192.168.0.103" />
 	<param name="/auvsi16/server_port" value="80" />
 	<param name="/auvsi16/team_code" value="rooster.php" />
 	<param name="/auvsi16/course_type" value="courseA" />
@@ -59,7 +59,8 @@
 		<param name="center_dock_lat" value="-6.367437" />
 		<param name="center_dock_long" value="106.829882" />
 	</node>
-
+	
+	<node name="interoperability_mission_control_simple" pkg="auvsi16" output="screen" type="interoperability_mission_control_simple" />
 	<node name="heartbeat" pkg="auvsi16" type="heartbeat" />
 	<node name="run_course" pkg="auvsi16" output="screen" type="run_course" />
 
