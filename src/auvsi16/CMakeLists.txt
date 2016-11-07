@@ -156,8 +156,12 @@ add_executable(node_controller src/node_controller.cpp )
 
 ## Declare a C++ executable for testing
 
-add_executable(renamespaced_mavros misc/ros/testing/renamespaced_mavros.cpp )
-target_link_libraries(renamespaced_mavros
+
+add_executable (navigation_mission_control src/mission/cmt/common.cpp src/mission/cmt/gui.cpp src/mission/navigation_mission_control.cpp
+    src/mission/cmt/CMT.cpp src/mission/cmt/Consensus.cpp src/mission/cmt/Fusion.cpp src/mission/cmt/Matcher.cpp src/mission/cmt/Tracker.cpp
+    src/mission/cmt/fastcluster/fastcluster.cpp)
+    
+target_link_libraries(navigation_mission_control
 ${catkin_LIBRARIES}
 ${OpenCV_LIBRARIES}
 ${GeographicLib_LIBRARIES}
@@ -172,13 +176,6 @@ ${GeographicLib_LIBRARIES}
 
 add_executable(docking_mission_control src/mission/docking_mission_control.cpp )
 target_link_libraries(docking_mission_control
-${catkin_LIBRARIES}
-${OpenCV_LIBRARIES}
-${GeographicLib_LIBRARIES}
-)
-
-add_executable(navigation_mission_control src/mission/navigation_mission_control.cpp )
-target_link_libraries(navigation_mission_control
 ${catkin_LIBRARIES}
 ${OpenCV_LIBRARIES}
 ${GeographicLib_LIBRARIES}

@@ -24,6 +24,7 @@ int 		center_buoy_y = 0;
 double	buoy_area			= 0;
 double 	radius_buoy		= 0;
 int 		buoy_number  	= 0;
+int 	arena_distance	= 46;
 
 std_msgs::String node_status;
 std_msgs::String node_feedback;
@@ -31,12 +32,13 @@ string										state;
 int main(int argc, char **argv){
 
 	ros::init(argc, argv, "navigation_mission_simple");
-	ros::NodeHandle nh;
+	ros::NodeHandle nh("~");
+	
+	nh.getParam("arena_distance", arena_distance);
 	image_transport::ImageTransport it(nh);
 	setBMFConfiguration(nh);
 
 	RoverAUTOConfiguration auto_speed_conf;
-	ImageProcessingInterface imgproc_interface;
 
 	changePID(0.3, 0, 0);
 
@@ -54,35 +56,35 @@ int main(int argc, char **argv){
 		ros::spinOnce();
 	}
 
-	ROS_WARN_STREAM("Navigation mission selected.");
-
 	auto_speed_conf.setFullSpeed();
 	if(auto_speed_conf.sendParameter()){
 		ROS_INFO("Success change speed to Full power");
 	}
-	else {
-		ROS_INFO("Failed change speed to Full power");
+	else{
+
+			ROS_INFO("Failed change speed to Full power");
 	}
-	imgproc_interface.setHSVRange(166,179,40,184,138,255);
-	imgproc_interface.configuration(3);
-	ROS_INFO("Waiting for Image Processing Node!");
-	// this it to whether image_received is empty or not, move this to a function.
-	// while (ros::ok() && front_image.empty() && right_image.empty()){
-	while (ros::ok() && !imgproc_status){
-		ros::spinOnce();
-	}
+	sleep(4);
+	
+	ROS_WARN_STREAM("Navigation mission selected.");
 
 	ros::spinOnce();	// read frame
 	double compass_hdg_at_capture = compass_hdg;
 	ROS_INFO_STREAM("Compass Heading : " << compass_hdg);
-	ROS_INFO_STREAM("Compass Heading Current: " << compass_hdg_at_capture);
 	ROS_INFO_STREAM("Latitude : " << global_position.latitude);
 	ROS_INFO_STREAM("Longitude : " <<  global_position.longitude);
 	ROS_INFO_STREAM("X Position : " << center_buoy_x);
 	//ROS_WARN_STREAM("Detected Red Buoy : " << red_buoy);
-	compass_hdg = compass_hdg_at_capture;
+	compass_hdg = compass_hdg_at_capture - 5;
+	if (compass_hdg < 0){
+		compass_hdg = 360 + compass_hdg;
+	}
+	else if (compass_hdg > 360){
+		compass_hdg = compass_hdg - 360;
+	}
+	ROS_INFO_STREAM("New Compass Heading: " << compass_hdg);
 
-	if(moveForward(40)){
+	if(moveForward(arena_distance)){
 		ROS_WARN_STREAM("Set Waypoint Success!");
 	}
 	else {
@@ -108,7 +110,7 @@ int main(int argc, char **argv){
 		checkGroundSpeed();
 		ros::spinOnce();
 	}
-	node_feedback.data = "nc:navigation.end";
+	
 	pub_node_select.publish(node_feedback);
 	auto_speed_conf.setNormalSpeed();
 	if(auto_speed_conf.sendParameter()){
@@ -118,6 +120,8 @@ int main(int argc, char **argv){
 
 			ROS_INFO("Failed change speed to Normal power");
 	}
+	sleep(4);
+	node_feedback.data = "nc:navigation.end";
 	ros::shutdown();
 	// if flightmode is HOLD, continue code
 
@@ -166,7 +170,7 @@ void checkGroundSpeed(){
 		changeFlightModeDebug("MANUAL");
 		sleep(5);
 		changeFlightModeDebug("AUTO");
-		sleep(10);
+		sleep(5);
 	}
 }
 

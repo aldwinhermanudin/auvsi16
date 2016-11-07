@@ -28,10 +28,10 @@ void nodeSelectCB(const std_msgs::String& msg);
 
 	ros::init(argc, argv, "node_controller");
 	ros::NodeHandle nh;
-	
+
 	ros::Subscriber 						sub_vfr_hud 		= nh.subscribe("/mavros/vfr_hud", 1, vfrHUDCB);
 	client_set_flightmode 	= nh.serviceClient<mavros_msgs::SetMode>("/mavros/set_mode");
-	
+
 	ros::Subscriber sub_state 			= nh.subscribe("/mavros/state", 1, stateCB);
 	ros::Publisher pub_node_select  = nh.advertise<std_msgs::String>("/auvsi16/node/select", 16);
 	ros::Publisher pub_challenge  = nh.advertise<std_msgs::String>("/auvsi16/challenge", 16, true);
@@ -55,25 +55,6 @@ void nodeSelectCB(const std_msgs::String& msg);
 
 		while(ros::ok() && node_select.data != "nc:navigation.end") ros::spinOnce();
 
-		ROS_INFO_STREAM("Launching Obstacle Mission in 5 seconds");
-		sleep(5);
-		node_select.data = "om:obstacle.start";
-		pub_node_select.publish(node_select);
-		challenge_status.data = "obstacle";
-		pub_challenge.publish(challenge_status);
-
-
-		while(ros::ok() && node_select.data != "nc:obstacle.end") ros::spinOnce();
-
-		ROS_INFO_STREAM("Launching Docking Mission in 5 seconds");
-		sleep(5);
-		node_select.data = "dm:docking.start";
-		pub_node_select.publish(node_select);
-		challenge_status.data = "docking";
-		pub_challenge.publish(challenge_status);
-
-		while(ros::ok() && node_select.data != "nc:docking.end") ros::spinOnce();
-		
 		ROS_INFO_STREAM("Launching Interoperability Mission in 5 seconds");
 		sleep(5);
 		node_select.data = "im:interoperability.start";
@@ -82,7 +63,7 @@ void nodeSelectCB(const std_msgs::String& msg);
 		pub_challenge.publish(challenge_status);
 
 		while(ros::ok() && node_select.data != "nc:interoperability.end") ros::spinOnce();
-		
+
 		changeFlightModeDebug("RTL");
 		challenge_status.data = "return";
 		pub_challenge.publish(challenge_status);
@@ -95,7 +76,7 @@ void nodeSelectCB(const std_msgs::String& msg);
 			checkRTLSpeed();
 			ros::spinOnce();
 		}
-		
+
 		ROS_INFO_STREAM("Ending Course in 5 seconds");
 		sleep(5);
 		node_select.data = "end_run";
@@ -166,3 +147,14 @@ void checkRTLSpeed(){
 		sleep(10);
 	}
 }
+
+
+/*		ROS_INFO_STREAM("Launching Docking Mission in 5 seconds");
+		sleep(5);
+		node_select.data = "dm:docking.start";
+		pub_node_select.publish(node_select);
+		challenge_status.data = "docking";
+		pub_challenge.publish(challenge_status);
+
+		while(ros::ok() && node_select.data != "nc:docking.end") ros::spinOnce();
+	*/

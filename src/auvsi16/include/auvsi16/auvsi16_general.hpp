@@ -33,7 +33,6 @@ void ImageProcessingInterface::configuration(int conf){
   	imgproc_select.data = conf;
   	pub_imgproc_select.publish(imgproc_select);
   	ROS_WARN_STREAM("Changing Image Processing to " << conf);
-  	sleep(1);
   }
 
   void 	ImageProcessingInterface::setHSVRange	(int lowh, int highh, int lows, int highs, int lowv, int highv){

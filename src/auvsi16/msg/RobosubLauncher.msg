@@ -1,2 +1,3 @@
 uint8 motor_direction
 uint8 motor_speed
+bool launcher_heater

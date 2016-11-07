@@ -59,8 +59,8 @@ int main(int argc, char **argv){
 	ros::Subscriber sub_imgproc_select	= nh.subscribe("/auvsi16/node/image_processing/select", 10, imageProcessingSelectCB);
 	ros::Subscriber sub_imgproc_hsv	= nh.subscribe("/auvsi16/node/image_processing/hsv", 10, imageProcessingHSVCB);
 
-	while (ros::ok() && front_image.empty() && right_image.empty()){
-	//while (ros::ok() && front_image.empty()){
+	//while (ros::ok() && front_image.empty() && right_image.empty()){
+  while (ros::ok() && front_image.empty()){
 		ros::spinOnce();
 	}
 	imageProcessingDisplayWindow();
@@ -71,7 +71,7 @@ int main(int argc, char **argv){
 		ros::spinOnce();
 		if(image_processing_select == 0){
 			resetImageProcessingData();
-			imgproc_data.detection_status = false;
+			imgproc_data.detection_status = true;
 		}
 		else if(image_processing_select == 1){
 			buoy_number = dockingImageProcessing(3, right_image, 0, &center_buoy_x, &center_buoy_y, &buoy_area, &radius_buoy, image_debug);
@@ -90,8 +90,12 @@ int main(int argc, char **argv){
 			//buoy_number = navigationImageProcessing(right_image, 0, &center_buoy_x, &center_buoy_y, &buoy_area, &radius_buoy, image_debug);
 			imgproc_data.detection_status = true;
 			imageProcessingDebug();
-		//	imageProcessingDisplay(right_image,image_debug);
+			//imageProcessingDisplay(right_image,image_debug);
 			imageProcessingDisplay(front_image,image_debug);
+		}
+		else if (image_processing_select == 4){
+			usleep(500000);	
+			continue;
 		}
 		else {
 			resetImageProcessingData();
@@ -169,14 +173,16 @@ int navigationImageProcessing	(Mat imgInput, int minimum_area, int *detected_cen
 	findContours(imgThresholded, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0,0));
 
 	int largest_bouy_area = 0;
+	int nearest_object = 0;
 	int largest_bouy_id = 0;
 	int number_of_detected_buoy = 0;
 	for( int i = 0; i< contours.size(); i++ ){
 		double a = contourArea( contours[i],false);  //  Find the area of contour
-		if(a > largest_bouy_area && a > minimum_area){
+		if(a > largest_bouy_area && a > minimum_area && (int)center.y > nearest_object){
 			largest_bouy_area = a;
 			largest_bouy_id = i;                //Store the index of largest contour
 			minEnclosingCircle( contours[i], center, radius);
+			nearest_object = (int)center.y;
 		}
 		if(largest_bouy_area > minimum_area){
 			number_of_detected_buoy++;

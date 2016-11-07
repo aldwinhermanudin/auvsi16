@@ -41,6 +41,11 @@ double heading_zero 		= 0;
 double heading_triangle = 0;
 double heading_one 			= 0;
 double heading_two 			= 0;
+int distance_from_shape 	= 7;	// distance from the docking mission initial waypoint to the docking location
+int shape_arena_range 		= 20;	// distance of the docking mission to travel 
+int distance_to_dock 		= 2;	// distance from detected point to the shape location
+int distance_to_away		= 10;	// distance from detected point to away from the detected shape
+int detection_accuracy  	= 15;	// for areaCheck()
 
 int 		center_buoy_x	= 0;
 int 		center_buoy_y = 0;
@@ -49,7 +54,7 @@ double 	radius_buoy		= 0;
 int 		buoy_number  	= 0;
 boost::shared_ptr<ImageProcessingInterface> imgproc_interface;
 
-string	server_ip					=	"192.168.0.103";
+string	server_ip					=	"127.0.0.1";
 int 		server_port				=	80;
 string 	team_code					=	"rooster.php";
 string	course_type 			= "courseA";
@@ -68,6 +73,11 @@ int main(int argc, char **argv){
 	nh.getParam("heading_zero", heading_zero);
 	nh.getParam("center_dock_lat", center_dock_gps.x_lat);
 	nh.getParam("center_dock_long", center_dock_gps.y_long);
+	nh.getParam("distance_from_shape", distance_from_shape);
+	nh.getParam("shape_arena_range", shape_arena_range);
+	nh.getParam("distance_to_dock", distance_to_dock);
+	nh.getParam("distance_to_away", distance_to_away);
+	nh.getParam("detection_accuracy", detection_accuracy);
 	nh.getParam("/auvsi16/server_ip", server_ip);
 	nh.getParam("/auvsi16/server_port", server_port);
 	nh.getParam("/auvsi16/team_code", team_code);
@@ -83,10 +93,7 @@ int main(int argc, char **argv){
 	ros::Subscriber sub_node_select	= nh.subscribe("/auvsi16/node/select", 10, nodeSelectCB);
 	ros::Subscriber sub_imgproc_data	= nh.subscribe("/auvsi16/node/image_processing/data", 10, imageProcessingCB);
 
-	int distance_from_shape = 7;
-	int distance_to_dock 		= 2;
-	int distance_to_away		= 10;
-	int detection_accuracy  = 15;
+	
 
 	ROS_WARN_STREAM("Waiting for docking mission selected.");
 	while (ros::ok() && node_status.data != "dm:docking.start"){
@@ -107,7 +114,7 @@ int main(int argc, char **argv){
 	second_symbol				= get_symbol.getSecondSymbol();
 	second_symbol_color = get_symbol.getSecondSymbolColor();
 
-	initializeDockingMission(distance_from_shape,20);
+	initializeDockingMission(distance_from_shape,shape_arena_range);
 	changeFlightModeDebug("AUTO");
 	if (scanDock(distance_from_shape, distance_to_dock, distance_to_away, detection_accuracy)){
 		ROS_WARN_STREAM("Scan Complete");
@@ -115,7 +122,7 @@ int main(int argc, char **argv){
 		ROS_WARN_STREAM("Docking");
 		changeFlightModeDebug("AUTO");
 		sleep(5);
-		while(checkAUTOCruise()) ros::spinOnce();
+		while(checkAUTOCruise() && ros::ok()) ros::spinOnce();
 	}
 	node_feedback.data = "nc:docking.end";
 	pub_node_select.publish(node_feedback);
@@ -126,7 +133,7 @@ void initializeDockingMission(double distance_from_triangle, double distance_fro
 	imgproc_interface->configuration(2);
 	imgproc_interface->setHSVRange(0,179,90,255,0,255);
 	ROS_INFO("Waiting for Image Processing Node!");
-
+	usleep(100000);
 	while (ros::ok() && !imgproc_status){
 		ros::spinOnce();
 	}
@@ -151,8 +158,10 @@ bool scanDock(int distance_from_shape,int distance_to_dock,int distance_to_away,
 		bool second_cross_status	= false;
 
 		wp_sender->clearWaypointList();	// clear waypoint list
-		imgproc_interface->configuration(2);
+		imgproc_interface->configuration(0);
 		ros::spinOnce();
+		usleep(100000);
+		imgproc_interface->configuration(2);
 		while(ros::ok() && !first_cross_status && checkAUTOCruise()){
 			checkGroundSpeed();
 			ros::spinOnce();
@@ -166,6 +175,7 @@ bool scanDock(int distance_from_shape,int distance_to_dock,int distance_to_away,
 
 		imgproc_interface->configuration(0);
 		ros::spinOnce();
+		usleep(100000);
 		imgproc_interface->configuration(1);
 		while(ros::ok() && !triangle_status && checkAUTOCruise()){
 			checkGroundSpeed();
@@ -181,6 +191,7 @@ bool scanDock(int distance_from_shape,int distance_to_dock,int distance_to_away,
 
 		imgproc_interface->configuration(0);
 		ros::spinOnce();
+		usleep(100000);
 		imgproc_interface->configuration(2);
 		while(ros::ok() && !second_cross_status && checkAUTOCruise()){
 			checkGroundSpeed();
@@ -208,7 +219,8 @@ bool scanDock(int distance_from_shape,int distance_to_dock,int distance_to_away,
 				ROS_WARN_STREAM("Docking failed, changing to next mission");
 				return false;
 			}
-			sleep(10);
+			ROS_WARN_STREAM("Wait for 5 seconds");
+			sleep(5);
 		}
 
 	}
@@ -383,6 +395,6 @@ void checkGroundSpeed(){
 		changeFlightModeDebug("MANUAL");
 		sleep(5);
 		changeFlightModeDebug("AUTO");
-		sleep(10);
+		sleep(5);
 	}
 }

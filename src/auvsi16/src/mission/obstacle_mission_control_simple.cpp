@@ -25,6 +25,7 @@ int 		center_buoy_y = 0;
 double	buoy_area			= 0;
 double 	radius_buoy		= 0;
 int 		buoy_number  	= 0;
+int 	arena_distance	= 40;
 
 std_msgs::String node_status;
 std_msgs::String node_feedback;
@@ -48,12 +49,13 @@ int main(int argc, char **argv){
 	nh.getParam("/auvsi16/server_port", server_port);
 	nh.getParam("/auvsi16/team_code", team_code);
 	nh.getParam("/auvsi16/course_type", course_type);
+	nh.getParam("arena_distance", arena_distance);
 	get_gate.setRemoteTarget(server_ip, server_port);
 	get_gate.setTeamCode(team_code);
 	get_gate.setCourseType(course_type);
 
 	ros::Subscriber 						sub_vfr_hud 		= nh.subscribe("/mavros/vfr_hud", 1, vfrHUDCB);
-		ros::Subscriber 						sub_state 			= nh.subscribe("/mavros/state", 1, stateCB);
+	ros::Subscriber 						sub_state 			= nh.subscribe("/mavros/state", 1, stateCB);
 
 	ros::Publisher pub_run_status		= nh.advertise<std_msgs::String>("/auvsi16/obstacle/navigation/status", 16);
 	ros::Publisher pub_node_select 	= nh.advertise<std_msgs::String>("/auvsi16/node/select", 16,true);
@@ -66,13 +68,6 @@ int main(int argc, char **argv){
 		ros::spinOnce();
 	}
 	ROS_WARN_STREAM("Obstacle mission selected.");
-
-	ROS_INFO("Waiting for Image Processing Node!");
-	// this it to whether image_received is empty or not, move this to a function.
-	// while (ros::ok() && front_image.empty() && right_image.empty()){
-	while (ros::ok() && !imgproc_status){
-		ros::spinOnce();
-	}
 
 	int response_status = 0 ;
 	while (response_status != 200 && ros::ok()){
@@ -90,7 +85,7 @@ int main(int argc, char **argv){
 	//ROS_WARN_STREAM("Detected Red Buoy : " << red_buoy);
 
 	compass_hdg = obstacle_heading;
-	if(moveForward(40)){
+	if(moveForward(arena_distance)){
 		ROS_WARN_STREAM("Set Waypoint Success!");
 	}
 	else {
@@ -164,7 +159,7 @@ void checkGroundSpeed(){
 		changeFlightModeDebug("MANUAL");
 		sleep(5);
 		changeFlightModeDebug("AUTO");
-		sleep(10);
+		sleep(5);
 	}
 }
 

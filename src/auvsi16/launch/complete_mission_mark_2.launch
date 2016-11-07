@@ -50,10 +50,8 @@
 	<node name="override_monitor" pkg="auvsi16" output="screen" type="override_monitor"/>
 	<node name="motor_controller" pkg="auvsi16" output="screen" type="motor_controller"/>
 
-	<node name="navigation_mission_control" pkg="auvsi16" output="screen" type="navigation_mission_control" >
+	<node name="navigation_mission_control_simple" pkg="auvsi16" output="screen" type="navigation_mission_control_simple" >
 			<param name="arena_distance" value="46" />
-			<param name="video_setpoint" value="320" />
-			<param name="heading" value="280" />
 	</node>
 
 	<node name="interoperability_mission_control_simple" pkg="auvsi16" output="screen" type="interoperability_mission_control_simple">
